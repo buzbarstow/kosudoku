@@ -1,0 +1,40 @@
+# ------------------------------------------------------------------------------------------------ #
+# Input file for kosudoku-poolanalyze
+# This program is the second step of data analysis in Knockout Sudoku.
+#
+# Buz Barstow 2016-05-03
+# ------------------------------------------------------------------------------------------------ #
+
+
+# ------------------------------------------------------------------------------------------------ #
+# Input data files and parameters
+
+rowPools = A,B,C,D,E,F,G,H
+colPools = 1,2,3,4,5,6,7,8,9,10,11,12
+controlPools = SoG,pta,Blank
+
+sudokuGridLayout = ../input_data/progenitor_collection_pooling/plate_grid.csv
+
+# poolPresenceTableFileName = \
+# ../input_data/progenitor_collection_pool_presence_table/pool_presence_table_short.csv
+
+poolPresenceTableFileName = \
+../input_data/progenitor_collection_pool_presence_table/pool_presence_table.csv
+
+
+readCountThresholdForInclusionInReadCountThresholds = 1
+
+startReadCountThresholdForTrialSolution = 1
+endReadCountThresholdForTrialSolution = 2
+
+readCountThresholdForReadCountRatioHistogramCalculation = 5
+# ------------------------------------------------------------------------------------------------ #
+
+
+# ------------------------------------------------------------------------------------------------ #
+# Output files
+
+poolPresenceTaxonomyTableFileName = \
+../output/kosudoku-poolanalyze/pool_presence_analysis_taxonomy_table.csv
+
+# ------------------------------------------------------------------------------------------------ #

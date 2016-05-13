@@ -1,0 +1,81 @@
+#!/sw/bin/python3.5
+
+# ----------------------------------------------------------------------------------------------- #
+# kosudoku-collectionmc
+# Created by Buz Barstow 2016-05-06
+
+# Monte Carlo code that simulates picking of a random progenitor library and determines gene
+# knockout coverage. 
+# ----------------------------------------------------------------------------------------------- #
+
+
+# ------------------------------------------------------------------------------------------------ #
+from kosudoku.montecarlo import SimulateMultiplePickings, SimulatePicking, PoissonEstimateOfGenesHit
+from kosudoku.output import generateOutputMatrixWithHeaders, writeOutputMatrix
+from kosudoku.input import get_input
+from kosudoku.utils import ensure_dir
+
+import sys
+from numpy import ones, float
+from matplotlib.pyplot import ion, ioff, show, figure, plot, grid, xlabel, ylabel, legend
+# ------------------------------------------------------------------------------------------------ #
+
+
+# ----------------------------------------------------------------------------------------------- #
+# Import the input parameter file
+argv = sys.argv
+
+inputParameters = ['numberOfTrials', 'maxMutants', 'outputFileName', \
+'transposonCoordToFeatureIndexFileName']
+
+inputParameterValues = get_input(argv, inputParameters)
+# ----------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------------------------- #
+# Parse the input data
+numberOfTrials = int(inputParameterValues['numberOfTrials'])
+maxMutants = int(inputParameterValues['maxMutants'])
+transposonCoordToFeatureIndexFileName = \
+inputParameterValues['transposonCoordToFeatureIndexFileName']
+outputFileName = inputParameterValues['outputFileName']
+# ----------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------------------------- #
+ensure_dir(outputFileName)
+# ----------------------------------------------------------------------------------------------- #
+
+# ------------------------------------------------------------------------------------------------ #
+# Do the simulation for the maximum non essential set
+
+[iAxis, averageFeatureHitCount, sdFeatureHitCount, featureHitCountUpperBound, \
+featureHitCountLowerBound, noUniqHittableFeatures] = \
+SimulateMultiplePickings(transposonCoordToFeatureIndexFileName, numberOfTrials, maxMutants)
+
+noUniqHittableFeaturesArray = ones(len(iAxis), float)*noUniqHittableFeatures
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+# Do a poisson simulation as well
+poissonUniqueGenesHit = PoissonEstimateOfGenesHit(iAxis, noUniqHittableFeatures)
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+headers = ['Mutants', 'AvUniqFeatures', 'SDUniq', 'FeaturesUpper', 'FeaturesLower']
+vectorList = [iAxis, averageFeatureHitCount, sdFeatureHitCount, \
+featureHitCountUpperBound, featureHitCountLowerBound]
+oMatrix = generateOutputMatrixWithHeaders(vectorList, headers, delimeter=',')
+writeOutputMatrix(outputFileName, oMatrix)
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+# Output simulation data
+figure()
+plot(iAxis, averageFeatureHitCount, c='blue', label='Monte Carlo estimate')
+plot(iAxis, noUniqHittableFeaturesArray, c='black')
+plot(iAxis, poissonUniqueGenesHit, c='red', label='Poisson estimate')
+grid()
+xlabel('Mutants Picked')
+ylabel('Non-essential Genes Hit')
+legend(loc=4)
+show()
+# ------------------------------------------------------------------------------------------------ #

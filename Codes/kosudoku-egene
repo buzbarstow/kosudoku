@@ -1,0 +1,89 @@
+#!/sw/bin/python3.5
+
+# ----------------------------------------------------------------------------------------------- #
+# kosudoku-egene
+# Created by Buz Barstow 2016-05-06
+#
+# Code to harmonize the an input list of essential gene data with a list of genes from a 
+# Genbank file.
+# Eventually, this code will be able to make lists of essential and dispensable genes from 
+# scratch, but right now it will need a little help. 
+# Currently this code is really only intended to work with the S. oneidensis genome and the 
+# essentiality data from Deutschbauer et al. 
+# ----------------------------------------------------------------------------------------------- #
+
+from kosudoku.utils import ensure_dir, FindATandTAPositions
+from kosudoku.input import get_input
+from kosudoku.feature import ImportFeatureArrayFromGenBank
+from kosudoku.montecarlo import ImportEssentialityData
+
+import sys
+
+# ----------------------------------------------------------------------------------------------- #
+# Import the input parameter file
+inputParameters = [\
+'essentialityDataFileName', 'referenceGenomeGenBankFileName', 'outputFileName']
+
+argv = sys.argv
+inputParameterValues = get_input(argv, inputParameters)
+# ----------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------------------------- #
+# Parse the input data
+referenceGenomeGenBankFileName = inputParameterValues['referenceGenomeGenBankFileName']
+essentialityDataFileName = inputParameterValues['essentialityDataFileName']
+outputFileName = inputParameterValues['outputFileName']
+# ----------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------------------------- #
+ensure_dir(outputFileName)
+# ----------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------------------------- #
+[ATandTAPositions, sequence] = FindATandTAPositions(referenceGenomeGenBankFileName, \
+format='genbank')
+
+essentialityDict = ImportEssentialityData(essentialityDataFileName)
+featureArray = ImportFeatureArrayFromGenBank(referenceGenomeGenBankFileName)
+# ----------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------------------------- #
+# Go through all of the features in the imported genome and extract the ones that refer to genes
+geneFeatures = []
+
+for feature in featureArray:
+	if feature.featureType == 'gene':
+		geneFeatures.append(feature)
+# ----------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------------------------- #
+# Go through the gene feature array (which is where we have gene coordinate information) and 
+# see if we can find a matching locus in the essentiality data. If so, mark the gene with that data,
+# if not, mark the gene as unknown which implies non-essential (giving the smallest number of 
+# essential genes and the largest number of non-essentials). 
+
+# Makes the assumption that there is only one locus tag per gene
+
+essentialityLocusTags = essentialityDict.keys()
+
+for feature in geneFeatures:
+	locusTag = feature.tagDict['locus_tag'][0]
+	
+	if locusTag in essentialityLocusTags:
+		feature.tagDict['Essentiality'] = essentialityDict[locusTag][1]
+	else:
+		feature.tagDict['Essentiality'] = 'Dispensable'
+# ----------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------------------------- #
+# Write out the conditioned essentiality data in the same format as the original input essentiality
+# data
+outputHandle = open(outputFileName, 'w')
+for feature in geneFeatures:
+	locusTag = feature.tagDict['locus_tag'][0]
+	essentialityTag = feature.tagDict['Essentiality']
+	geneName = feature.featureName
+	outputStr = locusTag + ',' + geneName + ',' + essentialityTag + '\n'
+	outputHandle.write(outputStr)
+outputHandle.close()
+# ----------------------------------------------------------------------------------------------- #

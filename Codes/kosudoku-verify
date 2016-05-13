@@ -1,0 +1,274 @@
+#!/sw/bin/python3.5
+
+# ----------------------------------------------------------------------------------------------- #
+# kosudoku-verify
+# Program for verifying predictions of progenitor collection contents by analysis of results of 
+# Sanger sequencing of individual mutants. 
+
+# Created by Buz Barstow 2015-6-14
+# Last updated by Buz Barstow 2016-05-05
+# ----------------------------------------------------------------------------------------------- #
+
+from kosudoku.utils import ensure_dir
+from kosudoku.input import get_input
+from kosudoku.xml import ImportSudokuGridFromXML, ExportListForXML
+from kosudoku.grid import FlattenSudokuGridLookupDict, AnnotateSudokuGridWithFeautureNames
+from kosudoku.feature import ImportFeatureArrayFromGenBank
+from kosudoku.sanger import ImportCatalogOfSangerReads, \
+BlastSangerFileAgainstSubjectGenome, FindFeatureNameCorrespondingToCoord, MakeGeneFeatureArray
+
+
+from numpy import argsort
+import os
+import sys
+
+# ------------------------------------------------------------------------------------------------ #
+inputParameters = [\
+'referenceGenomeGenBankFileName', 'sudokuGridXMLFile', 'verificationCatalogFileName', \
+'referenceGenomeFastaFileName', 'tempFileDir', 'sangerVerificationFileName']
+
+argv = sys.argv
+inputParameterValues = get_input(argv, inputParameters)
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+shewyGenomeGenBankFileName = inputParameterValues['referenceGenomeGenBankFileName']
+sudokuGridXMLFile = inputParameterValues['sudokuGridXMLFile']
+verificationCatalogFileName = inputParameterValues['verificationCatalogFileName']
+shewyGenomeFastaFileName = inputParameterValues['referenceGenomeFastaFileName']
+tempFileDir = inputParameterValues['tempFileDir']
+sangerVerificationFileName = inputParameterValues['sangerVerificationFileName']
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+# Import Sudoku grid and build gene feature array
+sudokuGridLookupDict, prPools, pcPools, rowPools, colPools = \
+ImportSudokuGridFromXML(sudokuGridXMLFile)
+
+flattenedSudokuGrid = FlattenSudokuGridLookupDict(sudokuGridLookupDict, prPools, pcPools, rowPools,\
+colPools)
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+ensure_dir(tempFileDir)
+ensure_dir(sangerVerificationFileName)
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+# Import Shewy GenBank filename
+featureArray = ImportFeatureArrayFromGenBank(shewyGenomeGenBankFileName)
+geneFeatureArray = MakeGeneFeatureArray(featureArray)
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+verificationCatalog = ImportCatalogOfSangerReads(verificationCatalogFileName)
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+# Get the predicted read alignment coordinates from the Sudoku grid 
+for entry in verificationCatalog:
+	
+	progPlateName = entry['progPlate']
+	progRow = entry['progRow']
+	progCol = str(entry['progCol'])
+	progWell = progRow + str(progCol)
+	entry['alignmentStarts'] = []
+	entry['alignmentEnds'] = []
+	entry['evalues'] = []
+
+	i = 0
+	entryFound = False
+	while i < len(flattenedSudokuGrid) and entryFound == False:
+		well = flattenedSudokuGrid[i]
+		plateName = well.addressDict['progenitor']['plateName']
+		row = well.addressDict['progenitor']['row'] 
+		col = well.addressDict['progenitor']['col']
+		
+		if plateName == progPlateName and row == progRow and col == progCol:
+			entryFound = True
+			readAlignmentCoords = well.readAlignmentCoords
+		
+		i += 1
+	
+	if entryFound:
+		i = 0
+		coords = []
+		locatabilities = []
+		while i < len(readAlignmentCoords):
+			coord = readAlignmentCoords[i].coord
+			coords.append(coord)
+			
+			locatability = readAlignmentCoords[i].locatability
+			
+			if locatability == 'ambiguous':
+				locatability = 'Bayesian'
+			elif locatability == 'unambiguous':
+				locatability = 'Direct'
+			else:
+				locatability = ''
+			
+			locatabilities.append(locatability)
+			
+			i += 1
+		
+		entry['coords'] = coords
+		entry['locatabilities'] = locatabilities
+	
+	else:
+		print('No matching entry in sudoku grid found for ' + progPlateName + '_' + progWell)
+# ------------------------------------------------------------------------------------------------ #
+
+
+# ------------------------------------------------------------------------------------------------ #
+# Blast the sanger reads agains the Shewy genome and test to see where it aligns to, calculate
+# the difference between the measured transposon location and the predicted location
+i = 0
+while i < len(verificationCatalog):
+	fullFileName = verificationCatalog[i]['baseDir']
+	fullFileName += '/' + verificationCatalog[i]['fileName']
+
+	hsps = BlastSangerFileAgainstSubjectGenome(fullFileName, shewyGenomeFastaFileName,\
+	removeTempFiles=True, tempFileDir=tempFileDir, evalue=0.1, task='blastn', perc_identity=90)
+	
+	for hsp in hsps:
+		verificationCatalog[i]['alignmentStarts'].append(hsp['start'])
+		verificationCatalog[i]['alignmentEnds'].append(hsp['end'])
+		verificationCatalog[i]['evalues'].append(hsp['evalue'])
+	
+	
+	i += 1
+	
+i = 0
+while i < len(verificationCatalog):
+	
+	evalues = verificationCatalog[i]['evalues']
+	if len(evalues) > 0:
+		minEvalueIndex = argsort(evalues)[0]
+		sangerCoord = verificationCatalog[i]['alignmentStarts'][minEvalueIndex]
+		verificationCatalog[i]['topSangerAlignment'] = sangerCoord
+		k = 0
+		diffs = []
+		absDiffs = []
+		while k < len(verificationCatalog[i]['coords']):
+			coord = verificationCatalog[i]['coords'][k]
+			diff = coord - sangerCoord
+			diffs.append(diff)
+			absDiffs.append(abs(diff))
+			k += 1
+		
+		verificationCatalog[i]['sangerToSudokuDifferences'] = diffs		
+		verificationCatalog[i]['sangerToSudokuAbsDifferences'] = absDiffs
+		
+		if len(absDiffs) > 0:
+			representativePredictedCoordIndex = argsort(absDiffs)[0]
+			
+			representativePredictedCoord = \
+			verificationCatalog[i]['coords'][representativePredictedCoordIndex]
+	
+			verificationCatalog[i]['topPredictedCoord'] = representativePredictedCoord
+			
+			verificationCatalog[i]['topSangerToTopSudokuDiff'] = \
+			verificationCatalog[i]['sangerToSudokuDifferences'][representativePredictedCoordIndex]
+			
+			verificationCatalog[i]['topPredictionLocatability'] = \
+			verificationCatalog[i]['locatabilities'][representativePredictedCoordIndex]
+			
+			verificationCatalog[i]['featuresForTopPrediction'] = \
+			FindFeatureNameCorrespondingToCoord(representativePredictedCoord, geneFeatureArray)
+			
+			
+	i += 1
+# ------------------------------------------------------------------------------------------------ #
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+# Output the data to a file
+i = 0
+
+outputHandle = open(sangerVerificationFileName, 'w')
+
+headerStr = 'Plate,Well,Predicted Sudoku Coordinate,Sanger Alignment Coordinate,Difference,'\
+'Locatability,Features,Predicted Coordinates,Sanger Coordinates,Locatabilities\n'
+	
+outputKeysLong = ['plate', 'well', 'predictedSudokuCoord', 'sangerAlignmentCoord', 'diff', \
+'predictedSudokuCoordLocatability', 'features', 'predictedCoords', 'sangerCoords', 'locatabilities']
+
+outputKeysShort = ['plate', 'well', 'predictedSudokuCoord', 'sangerAlignmentCoord', 'diff', \
+'predictedSudokuCoordLocatability', 'features']
+
+
+outputKeys = outputKeysShort
+
+
+outputHandle.write(headerStr)
+
+while i < len(verificationCatalog):
+	
+	verificationKeys = list(verificationCatalog[i].keys())
+	
+	outputDict = {}
+	
+	if 'topSangerAlignment' in verificationKeys:
+		outputDict['sangerAlignmentCoord'] = str(verificationCatalog[i]['topSangerAlignment'])
+	else:
+		outputDict['sangerAlignmentCoord'] = ''
+	
+	if 'topPredictedCoord' in verificationKeys:
+		outputDict['predictedSudokuCoord'] = str(verificationCatalog[i]['topPredictedCoord'])
+	else:
+		outputDict['predictedSudokuCoord'] = ''
+	
+	if 'topPredictionLocatability' in verificationKeys:
+		outputDict['predictedSudokuCoordLocatability'] = \
+		str(verificationCatalog[i]['topPredictionLocatability'])
+	else:
+		outputDict['predictedSudokuCoordLocatability'] = ''
+	
+	if 'topSangerToTopSudokuDiff' in verificationKeys:
+		outputDict['diff'] = str(verificationCatalog[i]['topSangerToTopSudokuDiff'])
+	else:
+		outputDict['diff'] = ''
+	
+	if 'featuresForTopPrediction' in verificationKeys:
+		outputDict['features'] = '"' + ExportListForXML(\
+		verificationCatalog[i]['featuresForTopPrediction'], delimeter=', ') + '"'
+	else:
+		outputDict['features'] = ''
+	
+	
+	
+	outputDict['sangerCoords'] = '"' + ExportListForXML(verificationCatalog[i]['alignmentStarts'], \
+	delimeter=', ') + '"'
+	
+	outputDict['predictedCoords'] = '"' + ExportListForXML(verificationCatalog[i]['coords'], \
+	delimeter=', ') + '"'
+	
+	outputDict['locatabilities'] = '"' + ExportListForXML(verificationCatalog[i]['locatabilities'],\
+	delimeter=', ') + '"'
+	
+	col = str(int(verificationCatalog[i]['progCol'])).zfill(2)
+	row = verificationCatalog[i]['progRow']
+	
+	outputDict['well'] = row + col
+	outputDict['plate'] = verificationCatalog[i]['progPlate']
+	
+	
+	j = 0
+	lineStr = ''
+	while j < len(outputKeys):
+		lineStr += outputDict[outputKeys[j]]
+		if j < len(outputKeys)-1:
+			lineStr += ','
+		else:
+			lineStr += '\n'
+		j += 1
+	
+	outputHandle.write(lineStr)
+	
+	i += 1
+
+outputHandle.close()
+# ------------------------------------------------------------------------------------------------ #
+
+

@@ -1,0 +1,32 @@
+# ------------------------------------------------------------------------------------------------ #
+# kosudoku-qc.inp
+# Created by Buz Barstow 2016-05-11
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+# Input files
+pgsudokuGridXMLFile = ../input_data/kosudoku-qc/progenitor_collection_catalog.xml
+
+
+condSudokuGridXMLFile = \
+../output/kosudoku-isitinthere/colony_purification/cpSudokuGrid.xml
+
+
+
+referenceGenomeGenBankFileName = \
+../input_data/reference_genome/composite_shewanella_genome.gb
+
+# Input parameters
+rearrayFillOrder = columns
+rearrayFillPattern = checkerboard
+
+startPlateForNewCondensedCollection = 115
+# ------------------------------------------------------------------------------------------------ #
+
+
+# ------------------------------------------------------------------------------------------------ #
+# Output filename
+rearrayInstructionsFileName = ../output/kosudoku-qc/rearray_instructions.csv
+cpMutantRearrayInstructionsFileName = ../output/kosudoku-qc/cp_mutant_rearray_instructions.csv
+# ------------------------------------------------------------------------------------------------ #
+

@@ -1,0 +1,194 @@
+#!/sw/bin/python3.5
+
+# ----------------------------------------------------------------------------------------------- #
+# kosudoku-qc
+# Created by Buz Barstow 2016-05-11
+# ----------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------------------------- #
+from kosudoku.input import get_input
+from kosudoku.utils import ensure_dir
+from kosudoku.xml import ImportSudokuGridFromXML
+from kosudoku.grid import FlattenSudokuGridLookupDict
+
+from kosudoku.feature import ImportFeatureArrayFromGenBank, UpdateFeatureArrayWithSudokuWells, \
+CalculateFeatureArrayTaxonomy
+
+from kosudoku.isitinthere import \
+FindSingleRepresentativeForColonyPurifiedMutantsInCondensedCollection, \
+AssignRepresentativeColonyPurifiedWellsToLaterInCondensedCollection, \
+WriteColonyPurifiedMutantCondensationInstructions
+
+from kosudoku.condense import FindFeaturesWithDisruptionsInProgenitorButNotInQC, \
+PickBestSudokuWellToDisruptFeature, AssignProgenitorWellsToCondensedCollection, \
+WriteSudokuGridCondensationInstructions, rows96, columns96, \
+SortBestSudokuWellsIntoSinglyAndMultiplyOccupiedSets
+
+
+
+import sys
+# ----------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------------------------- #
+# Import the input parameter file
+
+inputParameters = [\
+'pgsudokuGridXMLFile', 'condSudokuGridXMLFile', \
+'referenceGenomeGenBankFileName', 'rearrayFillOrder', 'rearrayFillPattern', \
+'rearrayInstructionsFileName', 'cpMutantRearrayInstructionsFileName', \
+'startPlateForNewCondensedCollection']
+
+argv = sys.argv
+
+inputParameterValues = get_input(argv, inputParameters)
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+pgsudokuGridXMLFile = inputParameterValues['pgsudokuGridXMLFile']
+condSudokuGridXMLFile = inputParameterValues['condSudokuGridXMLFile']
+referenceGenomeGenBankFileName = inputParameterValues['referenceGenomeGenBankFileName']
+
+rearrayFillOrder = inputParameterValues['rearrayFillOrder']
+rearrayFillPattern = inputParameterValues['rearrayFillPattern']
+
+startPlateForNewCondensedCollection = \
+int(inputParameterValues['startPlateForNewCondensedCollection'])
+
+rearrayInstructionsFileName = inputParameterValues['rearrayInstructionsFileName']
+cpMutantRearrayInstructionsFileName = inputParameterValues['cpMutantRearrayInstructionsFileName']
+
+# ----------------------------------------------------------------------------------------------- #
+
+# ------------------------------------------------------------------------------------------------ #
+# Initialize the output files
+ensure_dir(rearrayInstructionsFileName)
+ensure_dir(cpMutantRearrayInstructionsFileName)
+# ------------------------------------------------------------------------------------------------ #
+
+
+# ----------------------------------------------------------------------------------------------- #
+# Import the quality controlled collection catalog
+cdSudokuGridLookupDict, cdprPools, cdpcPools, cdrowPools, cdcolPools = \
+ImportSudokuGridFromXML(condSudokuGridXMLFile, useSudokuColonyPurifiedWells=True)
+
+# Flatten the qcSudokuGridLookupDict
+cdSudokuWellArray = FlattenSudokuGridLookupDict(cdSudokuGridLookupDict, cdprPools, cdpcPools, \
+cdrowPools, cdcolPools)
+
+# Import the progenitor collection catalog
+pgSudokuGridLookupDict, pgprPools, pgpcPools, pgrowPools, pgcolPools = \
+ImportSudokuGridFromXML(pgsudokuGridXMLFile)
+
+# Flatten the progenitor collection catalog
+pgSudokuWellArray = FlattenSudokuGridLookupDict(pgSudokuGridLookupDict, pgprPools, pgpcPools, \
+pgrowPools, pgcolPools)
+# ----------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------------------------- #
+# Import a feature array
+featureArray = ImportFeatureArrayFromGenBank(referenceGenomeGenBankFileName)
+
+# Make a gene feature array
+geneFeatureArray = []
+for feature in featureArray:
+	if feature.featureType == 'gene':
+		geneFeatureArray.append(feature)
+# ----------------------------------------------------------------------------------------------- #
+
+
+# ----------------------------------------------------------------------------------------------- #
+# Update the gene feature array with data from the progenitor collection
+UpdateFeatureArrayWithSudokuWells(geneFeatureArray, cdSudokuWellArray)
+UpdateFeatureArrayWithSudokuWells(geneFeatureArray, pgSudokuWellArray)
+
+# CalculateFeatureArrayTaxonomy(geneFeatureArray)
+# ----------------------------------------------------------------------------------------------- #
+
+
+# ----------------------------------------------------------------------------------------------- #
+# Find a correct representative copy for the colony purified mutants 
+# condensed_well_array_for_representative_cp_mutants = \
+# FindSingleRepresentativeForColonyPurifiedMutantsInCondensedCollection(cdSudokuWellArray)
+# ----------------------------------------------------------------------------------------------- #
+
+
+
+# ----------------------------------------------------------------------------------------------- #
+# Find the features for which we don't have a verified representative mutant in the condensed
+# collection. 
+# At some point, I want to implement a 2nd best pick algorithm (as we've tried the 1st pick, 
+# and it didn't work). 
+
+[featuresWithDisruptionsInCondensedAndProgenitor, featuresWithDisruptionsInProgenitorOnly] = \
+FindFeaturesWithDisruptionsInProgenitorButNotInQC(geneFeatureArray)
+
+featuresAnd2ndBestWellArray = PickBestSudokuWellToDisruptFeature(\
+featuresWithDisruptionsInProgenitorOnly, pgSudokuGridLookupDict)
+
+
+# ----------------------------------------------------------------------------------------------- #
+# Find a correct representative copy for the colony purified mutants 
+condensed_well_array_for_representative_cp_mutants = \
+FindSingleRepresentativeForColonyPurifiedMutantsInCondensedCollection(cdSudokuWellArray)
+# ----------------------------------------------------------------------------------------------- #
+
+
+
+# ----------------------------------------------------------------------------------------------- #
+# Find the features for which we don't have a verified representative mutant in the condensed
+# collection. 
+# At some point, I want to implement a 2nd best pick algorithm (as we've tried the 1st pick, 
+# and it didn't work). 
+
+[featuresWithDisruptionsInCondensedAndProgenitor, featuresWithDisruptionsInProgenitorOnly] = \
+FindFeaturesWithDisruptionsInProgenitorButNotInQC(geneFeatureArray)
+
+featuresAndBestWellArray = PickBestSudokuWellToDisruptFeature(\
+featuresWithDisruptionsInProgenitorOnly, pgSudokuGridLookupDict)
+
+[condensed_well_array_for_2nd_choice_singles, condensed_well_array_for_2nd_choice_multiples] = \
+SortBestSudokuWellsIntoSinglyAndMultiplyOccupiedSets(featuresAnd2ndBestWellArray, \
+rearrayPickOrder='columns')
+# ----------------------------------------------------------------------------------------------- #
+
+
+# ----------------------------------------------------------------------------------------------- #
+# Assign a single representative for each correct colony purified mutant from the condensed 
+# collection to a new well
+[new_condensed_well_array_for_representative_cp_mutants, currentPlateNumber, currentRowNumber, \
+currentColNumber] = \
+AssignRepresentativeColonyPurifiedWellsToLaterInCondensedCollection(\
+condensed_well_array_for_representative_cp_mutants, \
+startPlateForNewCondensedCollection, 1, 1, rows96, columns96, fillOrder=rearrayFillOrder, \
+fillPattern=rearrayFillPattern, fillLastPlateWithBlanks=True)
+
+
+# Assign the second choice mutants for features that were missed in the condensed collection that
+# only need rearray to new wells
+[condensed_well_array_for_2nd_choice_singles, currentPlateNumber, currentRowNumber, \
+currentColNumber] = \
+AssignProgenitorWellsToCondensedCollection(condensed_well_array_for_2nd_choice_singles, \
+currentPlateNumber, 1, 1, rows96, columns96, fillOrder=rearrayFillOrder, \
+fillPattern=rearrayFillPattern, fillLastPlateWithBlanks=True)
+
+# Assign the second choice mutants for features that were missed in the condensed collection that 
+# need colony purification to new wells
+[condensed_well_array_for_2nd_choice_multiples, currentPlateNumber, currentRowNumber, \
+currentColNumber] = \
+AssignProgenitorWellsToCondensedCollection(condensed_well_array_for_2nd_choice_multiples, \
+currentPlateNumber, 1, 1, rows96, columns96, fillOrder=rearrayFillOrder, \
+fillPattern=rearrayFillPattern, fillLastPlateWithBlanks=True)
+
+# Concatenate all mutant wells
+condensedWellArray = condensed_well_array_for_2nd_choice_singles + condensed_well_array_for_2nd_choice_multiples
+# ----------------------------------------------------------------------------------------------- #
+
+
+# ----------------------------------------------------------------------------------------------- #
+# Write out rearraying instructions
+# ----------------------------------------------------------------------------------------------- #
+WriteColonyPurifiedMutantCondensationInstructions(\
+cpMutantRearrayInstructionsFileName, new_condensed_well_array_for_representative_cp_mutants)
+
+WriteSudokuGridCondensationInstructions(rearrayInstructionsFileName, condensedWellArray)
+# ----------------------------------------------------------------------------------------------- #

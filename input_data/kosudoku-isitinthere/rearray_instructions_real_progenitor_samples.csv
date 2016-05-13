@@ -1,0 +1,9 @@
+#Condensed Collection Plate,Condensed Collection Row,Condensed Collection Column,Condensed Collection Well,Condensed Collection Plate Row,Condensed Collection Plate Column,Progenitor Collection Plate,Progenitor Collection Row,Progenitor Collection Column,Progenitor Collection Well,Condensation Type,Desired Transposon Coordinate,Desired Feature,Desired Locus Tag,Prediction Correct,Isolated Desired Mutant?
+1,A,3,A03,1,1,8,C,6,C06,Rearray,136396,yhgN,SO_0129,Yes,Yes
+1,E,3,E03,1,1,9,C,4,C04,Rearray,2208244,SO_2109,SO_2109,No,No
+1,F,4,F04,1,1,13,B,12,B12,Rearray,437953,pdhR,SO_0423,Yes,Yes
+74,C,7,C07,9,2,378,G,3,G03,Colony Purification,5018837,SO_A0059,SO_A0059,Yes,Yes
+74,D,7,D07,9,2,378,G,3,G03,Colony Purification,5018837,SO_A0059,SO_A0059,Yes,Yes
+74,C,9,C09,9,2,395,B,3,B03,Colony Purification,1091451,SO_1053,SO_1053,Yes,No
+74,C,12,C12,9,2,370,C,3,C03,Colony Purification,4250837,SO_4093,SO_4093,Yes,Yes
+75,A,5,A05,9,3,413,B,3,B03,Colony Purification,542932,SO_0520,SO_0520,Yes,No

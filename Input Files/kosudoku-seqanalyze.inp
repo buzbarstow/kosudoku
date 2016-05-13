@@ -1,0 +1,58 @@
+# ------------------------------------------------------------------------------------------------ #
+# Input file for kosudoku-seqanalyze
+# This program is the first step of data analysis in Knockout Sudoku.
+#
+# Buz Barstow 2016-05-03
+# ------------------------------------------------------------------------------------------------ #
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+# Temporary data
+
+genomeAlignmentBaseDir = ../output/kosudoku-seqanalyze/genome_alignment/
+genomeAlignmentFilePrefix = genome_alignment
+genomeArrayFileName = ../output/kosudoku-seqanalyze/compiled_alignments/compiled_alignments.csv
+
+
+trimmedSequencesBaseDir = ../output/kosudoku-seqanalyze/trimmed_sequences/
+trimmedSequencesFilePrefix = trimmed_sequences
+
+indexSummaryBaseDir = ../output/kosudoku-seqanalyze/index_recognition_summary/
+indexSummaryFilePrefix = index_recognition_summary
+
+himarRecognitionBaseDir = ../output/kosudoku-seqanalyze/himar_recognition_summary/
+himarRecognitionFilePrefix = himar_recognition_summary
+
+poolFileBaseDir = ../output/kosudoku-seqanalyze/pool_files/
+poolFilePrefix=pool_
+# ------------------------------------------------------------------------------------------------ #
+
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+# Input data
+
+barcodeFile = ../input_data/progenitor_collection_pooling/barcodes_and_reverse_complements.csv
+fastqFiles = ../input_data/sequence_data/xaa.fastq
+indexFastqFiles = ../input_data/index_data/xaa.fastq
+referenceIndexPrefix = ../input_data/bowtie_index/Shewy
+himarSequence = GGACTTATCAGCCAACCTGT
+deleteTempFiles = True
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+# Alignment parameters
+
+bowtieAlignmentMode = end-to-end
+# ------------------------------------------------------------------------------------------------ #
+
+
+# ------------------------------------------------------------------------------------------------ #
+# Output data
+
+outputLog = ../output/kosudoku-seqanalyze/log_files/seqanalyze_log.txt
+poolPresenceTableFileName = \
+../output/kosudoku-seqanalyze/pool_presence_table/pool_presence_table.csv
+# ------------------------------------------------------------------------------------------------ #

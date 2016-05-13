@@ -1,0 +1,118 @@
+#!/sw/bin/python3.5
+
+# ----------------------------------------------------------------------------------------------- #
+# kosudoku-poolsolve
+# Created by Buz Barstow 2015-06-14
+# Last updated by Buz Barstow 2016-05-03
+
+# Code needed for Bayesian inference solution of pool presence table
+# ----------------------------------------------------------------------------------------------- #
+
+from kosudoku.input import get_input
+from kosudoku.utils import ensure_dir
+from kosudoku.grid import ImportSudokuGridLayout, FlattenSudokuGridLookupDict, \
+AnnotateSudokuGridWithFeautureNames, WriteSudokuGridSummaryTable
+from kosudoku.pool import ImportPoolPresenceTable, SolvePoolPresenceTable
+from kosudoku.xml import ExportSudokuGridToXML
+from kosudoku.feature import ImportFeatureArrayFromGenBank, UpdateFeatureArrayWithSudokuWells, \
+CalculateFeatureArrayTaxonomy
+from kosudoku.poolanalysis import ReadBayesianInferenceParameters
+
+import sys
+import pdb
+import os
+import warnings
+
+# ----------------------------------------------------------------------------------------------- #
+warnings.simplefilter("ignore")
+# ----------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------------------------- #
+# Import the input parameter file
+
+argv = sys.argv
+
+inputParameters = [\
+'rowPools', 'colPools', 'controlPools', 'sudokuGridLayout', 'genBankFileName', \
+'poolPresenceTableFileName', \
+'readCountThreshold', 'maxGapForCoordGrouping', 'voigtScoreThreshold', 'maxTotalCoords', \
+'maxSinglePoolCoordNumber', \
+'sudokuGridXMLFile', 'sudokuGridSummaryFileName', \
+'bayesianParameterFileName']
+
+inputParameterValues = get_input(argv, inputParameters)
+# ----------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------------------------- #
+# Parse the input data
+rowPools = inputParameterValues['rowPools'].split(',')
+colPools = inputParameterValues['colPools'].split(',')
+controlPools = inputParameterValues['controlPools'].split(',')
+poolPresenceTableFileName = inputParameterValues['poolPresenceTableFileName']
+genBankFileName = inputParameterValues['genBankFileName']
+sudokuGridLayout = inputParameterValues['sudokuGridLayout']
+maxGapForCoordGrouping = int(inputParameterValues['maxGapForCoordGrouping'])
+readCountThreshold = int(inputParameterValues['readCountThreshold'])
+voigtScoreThreshold = float(inputParameterValues['voigtScoreThreshold'])
+maxTotalCoords = int(inputParameterValues['maxTotalCoords'])
+maxSinglePoolCoordNumber = int(inputParameterValues['maxSinglePoolCoordNumber'])
+sudokuGridXMLFile = inputParameterValues['sudokuGridXMLFile']
+sudokuGridSummaryFileName = inputParameterValues['sudokuGridSummaryFileName']
+bayesianParameterFileName = inputParameterValues['bayesianParameterFileName']
+# ----------------------------------------------------------------------------------------------- #
+
+# ------------------------------------------------------------------------------------------------ #
+# Import the pool presence table
+
+[sudokuGridLookupDict, prPools, pcPools] = ImportSudokuGridLayout(sudokuGridLayout, rowPools, \
+colPools)
+
+sudokuPoolColumns = ['readAlignmentCoord'] + rowPools + colPools + prPools + pcPools + controlPools
+
+poolPresenceTable = ImportPoolPresenceTable(poolPresenceTableFileName, sudokuPoolColumns)
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+# Read in the Bayesian inference parameters
+
+[logReadNumberRatioHistogramFitDict, logReadNumberRatioHistogramIntegralDict] = \
+ReadBayesianInferenceParameters(bayesianParameterFileName)
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+# Initialize the output files
+ensure_dir(sudokuGridXMLFile)
+ensure_dir(sudokuGridSummaryFileName)
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+sudokuGridTaxonomyDict = SolvePoolPresenceTable(sudokuGridLookupDict, poolPresenceTable, \
+rowPools, colPools, prPools, pcPools, controlPools, logReadNumberRatioHistogramFitDict, \
+logReadNumberRatioHistogramIntegralDict, \
+readCountThreshold, voigtScoreThreshold, maxSinglePoolCoordNumber, maxTotalCoords, \
+maxGapForCoordGrouping)
+
+
+featureArray = ImportFeatureArrayFromGenBank(genBankFileName)
+
+geneFeatureArray = []
+for feature in featureArray:
+	if feature.featureType == 'gene':
+		geneFeatureArray.append(feature)
+
+flattenedSudokuGrid = FlattenSudokuGridLookupDict(sudokuGridLookupDict, prPools, pcPools, rowPools,\
+colPools)
+
+UpdateFeatureArrayWithSudokuWells(geneFeatureArray, flattenedSudokuGrid)
+
+AnnotateSudokuGridWithFeautureNames(sudokuGridLookupDict, geneFeatureArray, prPools, pcPools, \
+rowPools, colPools)
+
+featureArrayTaxonomyDict = CalculateFeatureArrayTaxonomy(geneFeatureArray)
+
+ExportSudokuGridToXML(sudokuGridLookupDict, prPools, pcPools, rowPools, colPools, sudokuGridXMLFile)
+
+WriteSudokuGridSummaryTable(sudokuGridSummaryFileName, sudokuGridLookupDict, prPools, pcPools, \
+rowPools, colPools)
+
+# ------------------------------------------------------------------------------------------------ #

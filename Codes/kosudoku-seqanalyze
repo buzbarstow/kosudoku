@@ -1,0 +1,180 @@
+#!/sw/bin/python3.5
+# Change this to your preferred python distribution.
+# Make sure that kosudoku package is in your python path. 
+
+# ----------------------------------------------------------------------------------------------- #
+# kosudoku-seqanalyze
+# Program for reducing Illumina sequencing dataset to a set of transposon genomic insertion 
+# coordinates and pool coordinates. 
+# All code necessary to build pool presence table from Sudoku reads. 
+
+
+# Created by Buz Barstow 2015-6-14
+# Last updated by Buz Barstow 2016-05-02
+# ----------------------------------------------------------------------------------------------- #
+
+
+
+import pdb
+import gc
+import re
+import subprocess
+import sys
+import datetime
+
+from kosudoku.input import get_input
+
+from kosudoku.utils import GenerateFileNamesFromFileListAndBaseDir, \
+InitializeOutputFoldersAndFiles, ensure_dir
+
+from kosudoku.align import CheckHimarContentAndTrimSequences, SummarizeIndexReads, \
+AlignReadsToGenome, CompileAlignmentsWithIndexAndHimarSummaries
+
+from kosudoku.pool import BuildInitialPoolPresenceTable
+
+
+
+# ----------------------------------------------------------------------------------------------- #
+# Import the input parameter file
+
+argv = sys.argv
+
+inputParameters = ['outputLog', 'bowtieAlignmentMode', \
+'referenceIndexPrefix', 'himarSequence', 'genomeAlignmentBaseDir', 'genomeAlignmentFilePrefix', \
+'genomeArrayFileName', \
+'barcodeFile', \
+'poolPresenceTableFileName', \
+'trimmedSequencesBaseDir', 'trimmedSequencesFilePrefix', \
+'indexSummaryBaseDir', 'indexSummaryFilePrefix', \
+'himarRecognitionBaseDir', \
+'himarRecognitionFilePrefix', \
+'fastqFiles', 'indexFastqFiles', \
+'deleteTempFiles']
+
+inputParameterValues = get_input(argv, inputParameters)
+
+# ----------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------------------------- #
+# Parse the input data
+
+# Input data for himar recognition
+fastqFiles = inputParameterValues['fastqFiles'].split(',')
+indexFastqFiles = inputParameterValues['indexFastqFiles'].split(',')
+
+outputLog = inputParameterValues['outputLog']
+
+himarSequence = inputParameterValues['himarSequence']
+barcodeFile = inputParameterValues['barcodeFile']
+
+himarRecognitionFilePrefix = inputParameterValues['himarRecognitionFilePrefix']
+himarRecognitionBaseDir = inputParameterValues['himarRecognitionBaseDir']
+
+trimmedSequencesFilePrefix = inputParameterValues['trimmedSequencesFilePrefix']
+trimmedSequencesBaseDir = inputParameterValues['trimmedSequencesBaseDir']
+
+indexSummaryFilePrefix = inputParameterValues['indexSummaryFilePrefix']
+indexSummaryBaseDir = inputParameterValues['indexSummaryBaseDir']
+
+genomeAlignmentFilePrefix = inputParameterValues['genomeAlignmentFilePrefix']
+genomeAlignmentBaseDir = inputParameterValues['genomeAlignmentBaseDir']
+
+bowtieAlignmentMode = inputParameterValues['bowtieAlignmentMode']
+referenceIndexPrefix = inputParameterValues['referenceIndexPrefix']
+genomeArrayFileName = inputParameterValues['genomeArrayFileName']
+
+poolPresenceTableFileName = inputParameterValues['poolPresenceTableFileName']
+
+deleteTempFiles = inputParameterValues['deleteTempFiles']
+# ----------------------------------------------------------------------------------------------- #
+
+
+###################################################################################################
+# ----------------------------------------------------------------------------------------------- #
+# Step 0: Initialize files
+# ----------------------------------------------------------------------------------------------- #
+###################################################################################################
+
+# Initialize the log file and output folders
+InitializeOutputFoldersAndFiles(outputLog, himarRecognitionBaseDir, indexSummaryBaseDir, \
+trimmedSequencesBaseDir, genomeAlignmentBaseDir, genomeArrayFileName, \
+poolPresenceTableFileName)
+
+
+
+
+###################################################################################################
+# ----------------------------------------------------------------------------------------------- #
+# Step 1: Check Himar Content of Reads
+# ----------------------------------------------------------------------------------------------- #
+###################################################################################################
+
+# Import reads, check Himar content and write out trimmed reads and himar recognition summary
+
+[himarRecognitionFiles, trimmedSequenceFiles] = CheckHimarContentAndTrimSequences(fastqFiles, \
+himarSequence, himarRecognitionFilePrefix, himarRecognitionBaseDir, \
+trimmedSequencesFilePrefix, trimmedSequencesBaseDir, outputLog)
+
+
+
+###################################################################################################
+# ----------------------------------------------------------------------------------------------- #
+# Step 2: Summarize the Index Reads
+# ----------------------------------------------------------------------------------------------- #
+###################################################################################################
+
+# Import index reads, summarize with a code where possible, if not indicate an unreadable index
+
+indexAlignmentFiles = SummarizeIndexReads(indexFastqFiles, barcodeFile, indexSummaryFilePrefix, \
+indexSummaryBaseDir, outputLog)
+
+
+
+###################################################################################################
+# ----------------------------------------------------------------------------------------------- #
+# Step 3: Align to Genome
+# ----------------------------------------------------------------------------------------------- #
+###################################################################################################
+
+# Import the mfa files, align against the genome and then write summaries to log file
+
+bowtieMode = '--'+bowtieAlignmentMode
+
+genomeAlignmentFiles = AlignReadsToGenome(trimmedSequenceFiles, \
+outputLog, genomeAlignmentBaseDir, genomeAlignmentFilePrefix, referenceIndexPrefix, \
+bowtieMode=bowtieMode)
+
+# ----------------------------------------------------------------------------------------------- #
+
+
+
+###################################################################################################
+# ----------------------------------------------------------------------------------------------- #
+# Step 4: Compile Alignments
+# ----------------------------------------------------------------------------------------------- #
+###################################################################################################
+
+genomeArray = CompileAlignmentsWithIndexAndHimarSummaries(genomeAlignmentFiles, \
+indexAlignmentFiles, himarRecognitionFiles, outputLog, genomeArrayFileName)
+
+# ----------------------------------------------------------------------------------------------- #
+
+
+
+
+###################################################################################################
+# ----------------------------------------------------------------------------------------------- #
+# Step 6: Building initial pool presence table
+# ----------------------------------------------------------------------------------------------- #
+###################################################################################################
+
+# ----------------------------------------------------------------------------------------------- #
+BuildInitialPoolPresenceTable(genomeArray, outputLog, barcodeFile, poolPresenceTableFileName)
+
+gc.collect()
+# ----------------------------------------------------------------------------------------------- #
+
+
+
+
+
