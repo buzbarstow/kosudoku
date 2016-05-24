@@ -1,0 +1,22 @@
+# ---------------------------------------------------------------------------------- #
+# kosudoku-condense.inp
+# Created by Buz Barstow 2016-05-05
+# Input parameter file for reduction of progenitor collection to condensed collection.
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Input data
+sudokuGridXMLFile = \
+../input/shared/progenitor_collection_catalog/progenitor_collection_catalog.xml
+
+referenceGenomeGenBankFileName = 
+../input/shared/reference_genome/composite_shewanella_genome.gb
+
+rearrayFillOrder = columns
+rearrayFillPattern = checkerboard
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Output filename
+rearrayInstructionsFileName = ../output/kosudoku-condense/rearray_instructions.csv
+# ---------------------------------------------------------------------------------- #

@@ -1,0 +1,20 @@
+# ---------------------------------------------------------------------------------- #
+# kosudoku-collectionmc.inp
+# Created by Buz Barstow 2016-05-20
+# Program to generate rarefaction curve to estimate number of colonies to pick to 
+# achieve high level of coverage of genome. 
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Input data
+numberOfTrials = 5
+maxMutants = 50000
+
+transposonCoordToFeatureIndexFileName = \
+../input_data/kosudoku-collectionmc/transposon_coord_to_feature_lookup_table.csv
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Output data
+outputFileName = ../output/kosudoku-collectionmc/PickingSimulation.csv
+# ---------------------------------------------------------------------------------- #

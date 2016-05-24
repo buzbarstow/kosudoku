@@ -1,0 +1,34 @@
+# ---------------------------------------------------------------------------------- #
+# kosudoku-qc.inp
+# Created by Buz Barstow 2016-05-11
+# Input parameter file for condensation of colony purified section of condensed 
+# collection and addition of any missing mutants from progenitor collection. 
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Input files
+pgsudokuGridXMLFile = \
+../input/shared/progenitor_collection_catalog/progenitor_collection_catalog.xml
+
+condSudokuGridXMLFile = \
+../input/kosudoku-qc/cpSudokuGrid.xml
+
+referenceGenomeGenBankFileName = \
+../input/shared/reference_genome/composite_shewanella_genome.gb
+
+
+# Input parameters
+rearrayFillOrder = columns
+rearrayFillPattern = checkerboard
+
+startPlateForNewCondensedCollection = 115
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Output filename
+rearrayInstructionsFileName = ../output/kosudoku-qc/rearray_instructions.csv
+
+cpMutantRearrayInstructionsFileName = \
+../output/kosudoku-qc/cp_mutant_rearray_instructions.csv
+# ---------------------------------------------------------------------------------- #
+

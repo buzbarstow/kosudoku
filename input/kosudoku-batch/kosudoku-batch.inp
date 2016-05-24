@@ -1,0 +1,31 @@
+# ---------------------------------------------------------------------------------- #
+# kosudoku-batch.inp
+# Created by Buz Barstow 2016-05-20
+# Input file for solution for calculate of mutant batch size
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Input data
+
+# Number of colonies that we can plate in a day
+Nplate = 80E3
+
+# Shelf life of mutants in liquid media after reaching saturation in hours
+tLiquid = 168
+
+# Shelf life of mutants on solid media after appearance of colonies in hours
+tSolid = 48
+
+# Time needed for picked colonies to reach saturating density
+tSaturation = 21
+
+# Colony picking rate in colonies per hour
+rPick=1500
+
+# Rest between picking and pooling in hours
+tRest = 24
+
+# Number of mutants on a 96 well plate
+mutantsPerPlate = 96
+# ---------------------------------------------------------------------------------- #
+

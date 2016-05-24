@@ -1,0 +1,21 @@
+# ---------------------------------------------------------------------------------- #
+# kosudoku-egeneindex.inp
+# Created by Buz Barstow 2016-05-07
+# Input file for program to generate lookup table that connects transposon insertion
+# coordinates to loci in genome. 
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Input data
+referenceGenomeGenBankFileName = \
+../input/shared/reference_genome/composite_shewanella_genome.gb
+
+essentialityDataFileName = \
+../input/kosudoku-egeneindex/gene_essentiality_data.csv
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Output data
+outputFileName = \
+../output/kosudoku-egeneindex/transposon_coord_to_feature_lookup_table.csv
+# ---------------------------------------------------------------------------------- #

@@ -1,0 +1,32 @@
+# ---------------------------------------------------------------------------------- #
+# kosudoku-verify.inp
+# Created by Buz Barstow 2016-05-03
+# Input parameter file for comparison of Sanger sequencing data with Knockout Sudoku
+# predictions.
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Input files
+
+verificationCatalogFileName = \
+../input/kosudoku-verify/sanger_sequencing_data/spot_check_sequencing_data.csv
+
+referenceGenomeGenBankFileName = \
+../input/shared/reference_genome/composite_shewanella_genome.gb
+
+referenceGenomeFastaFileName = \
+../input/shared/reference_genome/composite_shewanella_genome.fa
+
+sudokuGridXMLFile = \
+../input/shared/progenitor_collection_catalog/progenitor_collection_catalog.xml
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Temporary files directory
+tempFileDir = ../temp/kosudoku-verify/
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Output Files
+sangerVerificationFileName = ../output/kosudoku-verify/sanger_verification.csv
+# ---------------------------------------------------------------------------------- #

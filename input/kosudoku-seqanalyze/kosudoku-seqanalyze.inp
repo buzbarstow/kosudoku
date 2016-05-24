@@ -1,0 +1,55 @@
+# ---------------------------------------------------------------------------------- #
+# kosudoku-seqanalyze.inp
+# Created by Buz Barstow 2016-05-03
+# Input parameter file for first step of sequence data analysis in Knockout Sudoku.
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Input data
+
+barcodeFile = \
+../input/shared/progenitor_collection_pooling/barcodes_and_reverse_complements.csv
+
+# Sequence files
+fastqFiles = ../input_data/sequence_data/xaa.fastq
+
+# Index sequence files
+indexFastqFiles = ../input_data/index_data/xaa.fastq
+
+referenceIndexPrefix = ../input/kosudoku-seqanalyze/bowtie_index/Shewy
+
+himarSequence = GGACTTATCAGCCAACCTGT
+deleteTempFiles = True
+bowtieAlignmentMode = end-to-end
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Temporary data
+
+genomeAlignmentBaseDir = ../temp/kosudoku-seqanalyze/genome_alignment/
+genomeAlignmentFilePrefix = genome_alignment
+
+genomeArrayFileName = \
+../temp/kosudoku-seqanalyze/compiled_alignments/compiled_alignments.csv
+
+trimmedSequencesBaseDir = ../temp/kosudoku-seqanalyze/trimmed_sequences/
+trimmedSequencesFilePrefix = trimmed_sequences
+
+indexSummaryBaseDir = ../temp/kosudoku-seqanalyze/index_recognition_summary/
+indexSummaryFilePrefix = index_recognition_summary
+
+himarRecognitionBaseDir = ../temp/kosudoku-seqanalyze/himar_recognition_summary/
+himarRecognitionFilePrefix = himar_recognition_summary
+
+poolFileBaseDir = ../temp/kosudoku-seqanalyze/pool_files/
+poolFilePrefix=pool_
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Output data
+
+outputLog = ../output/kosudoku-seqanalyze/log_files/seqanalyze_log.txt
+
+poolPresenceTableFileName = \
+../output/kosudoku-seqanalyze/pool_presence_table/pool_presence_table.csv
+# ---------------------------------------------------------------------------------- #

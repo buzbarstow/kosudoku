@@ -1,0 +1,33 @@
+# ---------------------------------------------------------------------------------- #
+# kosudoku-poolfit.inp
+# Input parameters for program to derive Bayesian inference parameters for solution
+# of pool presence table.
+# Created by Buz Barstow 2016-05-03
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Input data files and parameters
+
+rowPools = A,B,C,D,E,F,G,H
+colPools = 1,2,3,4,5,6,7,8,9,10,11,12
+controlPools = SoG,pta,Blank
+
+sudokuGridLayout = \
+../input/shared/progenitor_collection_pooling/plate_grid_progenitor_collection.csv
+
+poolPresenceTableFileName = \
+../input/shared/progenitor_collection_pool_presence_table/pool_presence_table.csv
+
+readCountThreshold = 5
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Output files
+
+logReadNumberRatioHistogramsFileName = \
+../output/kosudoku-poolfit/log_read_number_ratio_histograms.csv
+
+logReadNumberRatioFitFileName = ../output/kosudoku-poolfit/log_read_number_ratio_fits.csv
+
+bayesianParameterFileName = ../output/kosudoku-poolfit/bayesian_parameters.csv
+# ---------------------------------------------------------------------------------- #

@@ -1,0 +1,49 @@
+# ---------------------------------------------------------------------------------- #
+# kosudoku-isitinthere.inp
+# Created by Buz Barstow 2016-05-03
+# Input parameter file for next generation sequencing validation of condensed 
+# collection.
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Input data
+
+rowPools = A,B,C,D,E,F,G,H
+colPools = 1,2,3,4,5,6,7,8,9,10,11,12
+sudokuGridLayout =\
+../input/kosudoku-isitinthere/plate_grid_condensed_collection.csv
+
+maxGapForCoordGrouping = 4
+readCountThreshold = 5
+maxTotalCoords = 24
+maxSinglePoolCoordNumber = 12
+
+# Progenitor collection XML catalog
+pgsudokuGridXMLFile = \
+../input/shared/progenitor_collection_catalog/progenitor_collection_catalog.xml
+
+# Pool presence table for condensed collection
+poolPresenceTableFileName = \
+../input/kosudoku-isitinthere/condensed_collection_pool_presence_table.csv
+
+referenceGenomeGenBankFileName = \
+../input/shared/reference_genome/composite_shewanella_genome.gb
+
+# Predicted catalog for condensed collection
+predictedCondensedCollectionCatalogFileName = \
+../input/kosudoku-isitinthere/rearray_instructions_real_progenitor_samples.csv
+# ---------------------------------------------------------------------------------- #
+
+
+# ---------------------------------------------------------------------------------- #
+# Output files
+
+condSudokuGridSummaryFileName = \
+../output/kosudoku-isitinthere/cpSudokuGridSummary.csv
+
+
+condSudokuGridXMLFile = \
+../output/kosudoku-isitinthere/cpSudokuGrid.xml
+
+# ---------------------------------------------------------------------------------- #
+
