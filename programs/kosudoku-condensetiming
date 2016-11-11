@@ -1,0 +1,109 @@
+#!/sw/bin/python3.5
+
+# ------------------------------------------------------------------------------------------------ #
+# kosudoku-condensetiming
+# Created by Buz Barstow 2016-11-08
+# ------------------------------------------------------------------------------------------------ #
+
+from kosudoku.input import get_input
+from kosudoku.condensetiming import CalcNoProgPlatesThatCanBeManuallyRearrayedAndStruckOut, \
+CalculateMinimizedCryoPreservationTime, CalculatePickingTime, CalculateRearrayAndStreakOutRate, \
+CalcNoProgPlatesThatCanBeRearrayedAndStruckOut
+import sys
+
+# ------------------------------------------------------------------------------------------------ #
+# Import the input parameter file
+
+inputParameters = ['noHumans', 'noPipettors', 'noRobots', 'hoursAvailable', 'avMutRearrayPerPlate',\
+'avMutCPPerPlate', 'avPicksPerCPMutant', 'mutantsPerRearrayCondPlate', 'mutantsPerCPCondPlate', \
+'rearrayRate', 'streakOutTime', \
+'unsealAlTime', 'sealAlTime', 'aerasealTime', 'pipettingTimePerPlate', 'aerasealUnsealTime', \
+'pickingTimePerColony']
+
+argv = sys.argv
+
+inputParameterValues = get_input(argv, inputParameters)
+# ------------------------------------------------------------------------------------------------ #
+
+# ----------------------------------------------------------------------------------------------- #
+# Parse the input data
+noHumans = int(inputParameterValues['noHumans'])
+noPipettors = int(inputParameterValues['noPipettors'])
+noRobots = int(inputParameterValues['noRobots'])
+hoursAvailable = float(inputParameterValues['hoursAvailable'])
+avMutRearrayPerPlate = int(inputParameterValues['avMutRearrayPerPlate'])
+avMutCPPerPlate = int(inputParameterValues['avMutCPPerPlate'])
+avPicksPerCPMutant = int(inputParameterValues['avPicksPerCPMutant'])
+mutantsPerRearrayCondPlate = int(inputParameterValues['mutantsPerRearrayCondPlate'])
+mutantsPerCPCondPlate = int(inputParameterValues['mutantsPerCPCondPlate'])
+rearrayRate = float(inputParameterValues['rearrayRate'])
+streakOutTime = float(inputParameterValues['streakOutTime'])
+unsealAlTime = float(inputParameterValues['unsealAlTime'])
+sealAlTime = float(inputParameterValues['sealAlTime'])
+aerasealTime = float(inputParameterValues['aerasealTime'])
+pipettingTimePerPlate = float(inputParameterValues['pipettingTimePerPlate'])
+aerasealUnsealTime = float(inputParameterValues['aerasealUnsealTime'])
+pickingTimePerColony = float(inputParameterValues['pickingTimePerColony'])
+# ----------------------------------------------------------------------------------------------- #
+
+
+# ------------------------------------------------------------------------------------------------ #
+# Calculate number of progenitor collection plates that I can rearray and streak out from in a 
+# single sitting
+noProgPlates, noRerrayCondPlates, noCPCondPlates, noColoniesToPick = \
+CalcNoProgPlatesThatCanBeRearrayedAndStruckOut(rearrayRate, streakOutTime, \
+unsealAlTime, sealAlTime, aerasealTime, hoursAvailable, \
+noHumans, noRobots, avMutRearrayPerPlate, avMutCPPerPlate, avPicksPerCPMutant, \
+mutantsPerRearrayCondPlate=mutantsPerRearrayCondPlate, mutantsPerCPCondPlate=mutantsPerCPCondPlate)
+
+# Figure out how long it will take to cryopreserve the plates I set up
+bestCryopreservationTime, bestPipettingHumans, bestSealingHumans = \
+CalculateMinimizedCryoPreservationTime(noHumans, noPipettors, pipettingTimePerPlate, \
+aerasealUnsealTime, sealAlTime, noRerrayCondPlates)
+
+
+# Figure out how long it will take to pick mutants that were struck out earlier
+totalPickingTime = CalculatePickingTime(noHumans, noColoniesToPick, pickingTimePerColony)
+
+# Figure out how long it will take to cryopreserve the colony purified mutants
+bestCryopreservationTimeCP, bestPipettingHumansCP, bestSealingHumansCP = \
+CalculateMinimizedCryoPreservationTime(noHumans, noPipettors, pipettingTimePerPlate, \
+aerasealUnsealTime, sealAlTime, noCPCondPlates)
+# ------------------------------------------------------------------------------------------------ #
+
+
+# ------------------------------------------------------------------------------------------------ #
+# Print out the results
+separator = \
+'# ------------------------------------------------------------------------------------ #\n'
+separatorNoCR = \
+'# ------------------------------------------------------------------------------------ #'
+
+
+print(separatorNoCR)
+print("Day 1: Rearray and Streak-out of Selected Mutants for Condensed Collection\n")
+print("Number of progenitor plates that can be rearrayed in " + str(hoursAvailable) + ' hours: ' \
+'{:0.1f}'.format(noProgPlates))
+
+print("Number of rearrayed condensed plates produced: " + '{:0.1f}'.format(noRerrayCondPlates))
+print("Number of colony purified condensed plates that will be produced: " \
++ '{:0.1f}'.format(noCPCondPlates))
+print(separator)
+
+print(separatorNoCR)
+print("Day 2: Cryopreservation of Rearrayed Mutants and Colony Picking of Struck-out Mutants\n")
+print("Time for cryopreservation of rearrayed condensed plates: " \
++ '{:0.3f}'.format(bestCryopreservationTime/3600.) + ' hours')
+print("People assigned to pipetting: " + str(bestPipettingHumans))
+print("People assigned to sealing and unsealing: " + str(bestSealingHumans))
+print("Time for picking struck-out colonies: " + '{:0.1f}'.format(totalPickingTime/3600.) \
++ ' hours')
+print(separator)
+
+print(separatorNoCR)
+print("Day 3: Cryopreservation of Colony Purified Mutants\n")
+print("Time for cryopreservation of colony purified plates: " \
+'{:0.1f}'.format(bestCryopreservationTimeCP/3600.) + ' hours')
+print("People assigned to pipetting: " + str(bestPipettingHumansCP))
+print("People assigned to sealing and unsealing: " + str(bestSealingHumansCP))
+print(separator)

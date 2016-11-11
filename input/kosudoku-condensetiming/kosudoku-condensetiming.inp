@@ -1,0 +1,62 @@
+# ---------------------------------------------------------------------------------- #
+# kosudoku-batch.inp
+# Created by Buz Barstow 2016-11-10
+# Input file for solution for calculation of timings for condensation of progenitor
+# collection
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Input data
+
+# Number of people, colony picking robots and multi-channel pipettors available for
+# condensation of progenitor collection
+noHumans = 5 
+noRobots = 1
+noPipettors = 1
+
+# Hours available for condensation tasks each day
+hoursAvailable = 16
+
+# Average number of mutants that we want to simply rearray per progenitor collection
+# plate
+avMutRearrayPerPlate = 7
+
+# Average number of mutants that we need to colony purify in order to make condensed
+# collection per progenitor collection plate
+avMutCPPerPlate = 3
+
+# Average number of colonies that we need to pick to from colony purify mutants
+avPicksPerCPMutant = 4
+
+# Rearrayed mutants that we place on a single 96-well plate
+mutantsPerRearrayCondPlate = 94
+
+# Colony purified picked mutants that we place on a single 96-well plate
+mutantsPerCPCondPlate = 94
+
+# Mutant rearray rate in mutants per minute (currently 1250 hr^-1 or 25/72 s^-1).
+# This is a robotic rearray rate
+rearrayRate = 0.3472
+# ---------------------------------------------------------------------------------- #
+
+# ---------------------------------------------------------------------------------- #
+# Timings in seconds
+
+# Time needed to streak out sample from well of 96-well plate onto agar petri dish
+streakOutTime = 20
+
+# Time to remove an Aluminum foil seal from frozen 96-well plate
+unsealAlTime = 40
+sealAlTime = 40
+
+# Times to add and remove air porous membranes
+aerasealTime = 40
+aerasealUnsealTime = 20
+
+# Time needed to add cryoprotectant to all wells of a 96-well plate. Currently set
+# for 96-channel pipettor
+pipettingTimePerPlate = 15
+
+# Time needed to pick colony with toothpick
+pickingTimePerColony = 10
+# ---------------------------------------------------------------------------------- #
