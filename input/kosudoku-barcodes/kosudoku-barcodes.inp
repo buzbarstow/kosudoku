@@ -18,3 +18,4 @@ barcodeSeq2 = GTGACTGGAGTTCAGACGTGTGCTCTT
 barcodeLength = 8
 
 outputFileName = ../output/kosudoku-barcodes/barcodes.csv
+# ---------------------------------------------------------------------------------- #
