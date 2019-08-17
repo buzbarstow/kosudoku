@@ -531,13 +531,15 @@ def ImportFeatureArrayFromGenBank(genBankFile):
 
 	import re
 	import pdb
-	
+
 	featureNameRe = re.compile(r'\s+/gene=[\'|"](\w+)[\'|"]')
-	
-	featureStartRe = re.compile(r'\s+(\w+)\s+([complement\(|join\(]*\d+\.\.\d+[\,\d+\.\.\d+]*[\)]*)')
-	
+
+	# looks for things of the form [feature_type n1...n2] (optional form of complement(n1...n2) or join(n1...n2))
+	featureStartRe = re.compile(r'\s+(\w+)\s+((?:complement\(|join\()*\d+\.\.\d+[\,\d+\.\.\d+]*[\)]*)')
+
+	# added acceptance of = and #
 	featureTagRe = \
-	re.compile(r'\s+/([a-zA-Z0-9_\-]+)=([\'|"]*)([\[\]a-zA-Z0-9_\-\.\,\:?!><\- \t\&\*\(\)/;\+\/`\']+)([\'|"]*)')
+	re.compile(r'\s+/([a-zA-Z0-9_\-]+)=([\'|"]*)([\[\]a-zA-Z0-9_\-\.\,\:?!><\- \t\&\*\(\)/;\+\=\#\/`\']+)([\'|"]*)')
 # 	re.compile(r'\s+/([a-zA-Z0-9_\-]+)=([\'|"]*)([\[a\]-zA-Z0-9_\-\.\,\:\?\! \t\&\*\(\)/;\+\/`\']+)([\'|"]*)')
 
 	

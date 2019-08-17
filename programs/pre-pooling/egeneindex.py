@@ -72,7 +72,7 @@ if featureTypeToIndex == 'CDS':
     for feature in featureArray:
         if feature.featureType == 'CDS':
             geneFeatures.append(feature)
-elif featureTypeToIndex == 'CDS':
+elif featureTypeToIndex == 'gene':
     for feature in featureArray:
         if feature.featureType == 'gene':
             geneFeatures.append(feature)
