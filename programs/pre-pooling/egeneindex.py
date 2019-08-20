@@ -97,7 +97,10 @@ essentialityLocusTags = essentialityDict.keys()
 geneLocusDict = {}
 
 for feature in geneFeatures:
-    locusTag = feature.tagDict['locus_tag'][0]
+    if 'locus_tag' in feature.tagDict:
+        locusTag = feature.tagDict['locus_tag'][0]
+    else:
+        locusTag = feature.tagDict['db_xref'][0]
     startCoord = feature.startCoord
     endCoord = feature.endCoord
 

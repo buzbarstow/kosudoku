@@ -1,5 +1,8 @@
 # ------------------------------------------------------------------------------------------------ #
 # Sudoku code for alignment of massively parallel sequencing reads
+
+# Last modified by Buz Barstow 2018-11-27
+# Added new index matching functions
 # ------------------------------------------------------------------------------------------------ #
 
 from kosudoku.utils import gSeparatorString, UpdateLogFileData
@@ -213,6 +216,35 @@ def CountEntriesInSummaryFiles(alignmentFiles, calculateMaxReadIDLength=False):
 # ------------------------------------------------------------------------------------------------ #
 
 
+
+# ------------------------------------------------------------------------------------------------ #
+def CountEntriesInSummaryFile3(alignmentFile, calculateMaxReadIDLength=False):
+	import gc
+	
+	alignmentFileEntries = 0
+	
+	maxReadIDLength = 10
+		
+	with open(alignmentFile) as infile:
+		for line in infile:
+			alignmentFileEntries += 1
+			if calculateMaxReadIDLength == True:
+				lineArray = line.strip().split(',')	
+				readIDLength = len(lineArray[0])
+				if readIDLength > maxReadIDLength:
+					maxReadIDLength = readIDLength
+	
+	gc.collect()
+	
+	if calculateMaxReadIDLength:
+		return [alignmentFileEntries, maxReadIDLength]
+	else:
+		return alignmentFileEntries
+# ------------------------------------------------------------------------------------------------ #
+
+
+
+
 # ------------------------------------------------------------------------------------------------ #
 def CountEntriesInAllSummaryFiles(genomeAlignmentFiles, himarRecognitionFiles, indexAlignmentFiles):
 	
@@ -226,6 +258,26 @@ def CountEntriesInAllSummaryFiles(genomeAlignmentFiles, himarRecognitionFiles, i
 
 	return [genomeAlignmentEntries, himarRecognitionEntries, indexAlignmentEntries, maxReadIDLength]
 # ------------------------------------------------------------------------------------------------ #
+
+
+# ------------------------------------------------------------------------------------------------ #
+def CountEntriesInAllSummaryFiles3(genomeAlignmentFile, himarRecognitionFile, indexAlignmentFile):
+	
+	print("Counting entries in genome alignment file and calculating maximum length of read ids")
+	[genomeAlignmentEntries, maxReadIDLength] = CountEntriesInSummaryFile3(genomeAlignmentFile, \
+	calculateMaxReadIDLength=True)
+	print("Counting entries in himar alignment file")
+	himarRecognitionEntries = CountEntriesInSummaryFile3(himarRecognitionFile)
+	print("Counting entries in index alignment file")
+	indexAlignmentEntries = CountEntriesInSummaryFile3(indexAlignmentFile)
+
+	return [genomeAlignmentEntries, himarRecognitionEntries, indexAlignmentEntries, maxReadIDLength]
+# ------------------------------------------------------------------------------------------------ #
+
+
+
+
+
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -272,6 +324,63 @@ def ParseGenomeAlignmentFiles(readIDFieldCode, genomeAlignmentFiles, genomeAlign
 	return genomeArray
 # ------------------------------------------------------------------------------------------------ #
 
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+def ParseGenomeAlignmentFile3(readIDFieldCode, genomeAlignmentFile, genomeAlignmentEntries):
+# Updated to import flag that indicates if bowtie alignment flags sum was wrong
+# Also updated to deal with with only one alignment file at once
+	import numpy
+	import ast
+	from numpy import int32
+	
+	genomeArray = numpy.zeros(genomeAlignmentEntries, \
+	dtype={'names':['readID', 'readAlignmentCoord', 'alignmentQuality', 'alignmentFound', \
+	'multipleAlignmentsFound', 'himarRecognized', 'index', 'strangeFlagsSum'], \
+	'formats':[readIDFieldCode, int32, int32, int32, int32, int32, int32, int32]})
+	
+	i = 0
+	print("Processing file: " + genomeAlignmentFile)
+
+	with open(genomeAlignmentFile) as infile:
+		for line in infile:
+			lineArray = line.strip().split(',')
+	
+			genomeArray[i]['readID'] = lineArray[0]
+			genomeArray[i]['readAlignmentCoord'] = int(lineArray[1])
+			genomeArray[i]['alignmentQuality'] = int(lineArray[2])
+		
+			if ast.literal_eval(lineArray[3]):
+				genomeArray[i]['alignmentFound'] = 1
+			else:
+				genomeArray[i]['alignmentFound'] = 0
+		
+			if ast.literal_eval(lineArray[4]):
+				genomeArray[i]['multipleAlignmentsFound'] = 1
+			else:
+				genomeArray[i]['multipleAlignmentsFound'] = 0
+				
+			if ast.literal_eval(lineArray[5]):
+				genomeArray[i]['strangeFlagsSum'] = 1
+			else:
+				genomeArray[i]['strangeFlagsSum'] = 0
+		
+			i += 1
+	
+	return genomeArray
+# ------------------------------------------------------------------------------------------------ #
+
+
+
+
+
+
+
+
+
+
+
 # ------------------------------------------------------------------------------------------------ #
 def ParseIndexAlignmentFiles(readIDFieldCode, indexAlignmentFiles, indexAlignmentEntries):
 	
@@ -303,6 +412,58 @@ def ParseIndexAlignmentFiles(readIDFieldCode, indexAlignmentFiles, indexAlignmen
 	return indexArray
 # ------------------------------------------------------------------------------------------------ #
 
+
+
+
+
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+# Updated to deal with only one file at once
+def ParseIndexAlignmentFile3(readIDFieldCode, indexAlignmentFile, indexAlignmentEntries):
+	
+	import numpy
+	import ast
+	from numpy import int32
+	import pdb
+	
+	indexArray = numpy.zeros(indexAlignmentEntries, dtype={'names':['readID', 'index'], \
+	'formats':[readIDFieldCode, int32]})
+
+	
+	i = 0
+	print("Processing file: " + indexAlignmentFile)
+
+	infile = open(indexAlignmentFile, 'r')
+	data = infile.readlines()
+
+	for line in data:
+			
+		lineArray = line.strip().split(',')
+		try:
+			indexArray[i]['readID'] = lineArray[0]
+		except:
+			pdb.set_trace()
+	
+		# If the index is not recognized, set the index to zero 
+		if ast.literal_eval(lineArray[2]) == False:
+			index = 0
+		else:
+			indexArray[i]['index'] = lineArray[1]	
+	
+		i += 1
+		
+	return indexArray
+# ------------------------------------------------------------------------------------------------ #
+
+
+
+
+
+
+
+
 # ------------------------------------------------------------------------------------------------ #
 def ParseHimarAlignmentFiles(readIDFieldCode, himarRecognitionFiles, himarRecognitionEntries):
 	import numpy
@@ -333,6 +494,51 @@ def ParseHimarAlignmentFiles(readIDFieldCode, himarRecognitionFiles, himarRecogn
 				i += 1
 	return himarArray
 # ------------------------------------------------------------------------------------------------ #
+
+
+# ------------------------------------------------------------------------------------------------ #
+# Updated to deal with only one file at once
+def ParseHimarAlignmentFile3(readIDFieldCode, himarRecognitionFile, himarRecognitionEntries):
+	import numpy
+	import ast
+	from numpy import int32
+	
+	himarArray = numpy.zeros(himarRecognitionEntries, dtype={'names':['readID', 'himarRecognized'], \
+	'formats':[readIDFieldCode, int32]})
+	
+	print("Processing file: " + himarRecognitionFile)
+	
+	i = 0
+	with open(himarRecognitionFile) as infile:
+		for line in infile:
+			lineArray = line.strip().split(',')		
+			readID = lineArray[0]
+			himarRecognized = ast.literal_eval(lineArray[1])
+
+			himarArray[i]['readID'] = readID
+		
+			if himarRecognized:
+				himarArray[i]['himarRecognized'] = 1
+			else:
+				himarArray[i]['himarRecognized'] = 0
+			
+			i += 1
+		
+	return himarArray
+# ------------------------------------------------------------------------------------------------ #
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # ------------------------------------------------------------------------------------------------ #
 def UpdateGenomeArrayWithHimarAndIndex(genomeArray, indexArray, himarArray):
@@ -526,6 +732,11 @@ def GenerateSudokuReadTaxonomy(genomeArray, outputLog, operationTimingInterval=1
 
 
 
+
+
+
+
+
 # ------------------------------------------------------------------------------------------------ #
 def OutputReadTaxonomy(taxonomyDict, outputLog):
 	
@@ -602,7 +813,10 @@ def ImportGenomeCompilationFile(genomeCompilationFile, includesb=False):
 
 
 # ------------------------------------------------------------------------------------------------ #
-def GenerateBarcodeLookupTable(barcodeFile):
+def GenerateBarcodeLookupTable(barcodeFile, barcodePrefix='', barcodePostfix=''):
+# Modified with a kludge to include extra Illumina index sequence that gets read in with the
+# Sudoku barcode as part of the index. Adds the prefix and postfix to the reverse complement
+
 	barcodeFileHandle = open(barcodeFile, 'r')
 	barcodeFileData = barcodeFileHandle.readlines()
 	barcodeFileHandle.close()
@@ -612,13 +826,78 @@ def GenerateBarcodeLookupTable(barcodeFile):
 	for line in barcodeFileData:
 		if line[0] != '#':
 			lineData = line.strip().split(',')
-			revCompl = lineData[2]
+			revCompl = barcodePrefix + lineData[2] + barcodePostfix
 			barcodeNumber = lineData[3]
 			barcodeLookupTable[revCompl] = int(barcodeNumber)
 		
 	barcodes = barcodeLookupTable.keys()
 	return [barcodeLookupTable, barcodes]
 # ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+def GenerateNestedDecisionDict(barcodeList):
+
+	nestedDecisionDict = {}
+	j = 0
+
+	while j < len(barcodeList):
+		firstLetter = barcodeList[j][0]
+		secondLetter = barcodeList[j][1]
+	
+		nestedDecisionDictKeys = nestedDecisionDict.keys()
+	
+		if firstLetter not in nestedDecisionDictKeys: 
+			nestedDecisionDict[firstLetter] = {secondLetter:[barcodeList[j]]}
+		else:
+			secondLevelKeys = nestedDecisionDict[firstLetter]
+		
+			if secondLetter not in secondLevelKeys: 
+				nestedDecisionDict[firstLetter][secondLetter] = [barcodeList[j]]
+			else:
+				nestedDecisionDict[firstLetter][secondLetter].append(barcodeList[j])
+			
+		j += 1
+	
+	return nestedDecisionDict
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+def GenerateMultipleEntryDict(barcodeList, indexSequenceSampleLength):
+	# Generate the search dictionary for sequence indexes
+	barcodeLen = len(barcodeList[0])
+
+	multipleEntryPointDecisionDict = {}
+	i = 0
+	while i < barcodeLen - indexSequenceSampleLength:
+		j = 0
+		while j < len(barcodeList):
+			letters = barcodeList[j][i:i+indexSequenceSampleLength+1]
+			code = str(i) + '_' + letters
+		
+			multipleEntryPointDecisionDictKeys = multipleEntryPointDecisionDict.keys()
+		
+			if code not in multipleEntryPointDecisionDictKeys: 
+				multipleEntryPointDecisionDict[code] = [barcodeList[j]]
+			else:
+				multipleEntryPointDecisionDict[code].append(barcodeList[j])
+		
+			j += 1
+		i += 1
+	
+	multipleEntryPointDecisionDictLengths = {}
+	multipleEntryPointDecisionDictKeys = multipleEntryPointDecisionDict.keys()
+
+	for key in multipleEntryPointDecisionDictKeys:
+		multipleEntryPointDecisionDictLengths[key] = len(multipleEntryPointDecisionDict[key])
+	
+	return multipleEntryPointDecisionDict
+# ------------------------------------------------------------------------------------------------ #
+
+
+
+
+
+
 
 # ------------------------------------------------------------------------------------------------ #
 def ParseGenomeArrayToPoolFiles(genomeArray, barcodeLookupTable, poolFileBaseDir, poolFilePrefix):	
@@ -1031,58 +1310,170 @@ trimmedSequencesFilePrefix, trimmedSequencesBaseDir, outputLog):
 # ------------------------------------------------------------------------------------------------ #
 ####################################################################################################
 
+
 # ----------------------------------------------------------------------------------------------- #
-def AssignBarcodeReadToPool(indexSeq, mismatchRegexListDict, barcodeLookupTable, barcodeList):
+def hamming_distance(s1, s2):
+    """Return the Hamming distance between equal-length sequences"""
+    
+    import numpy
+    import pdb
+    
+    if len(s1) != len(s2):
+        raise ValueError("Undefined for sequences of unequal length")
+        
+        
+    zipseq = zip(s1, s2)
+        
+    sum = 0
+    
+    for el1, el2 in zipseq:
+    	if el1 != el2:
+    		sum += 1
+    	else:
+    		sum += 0
+    
+    return sum
+# ----------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------------------------- #
+def CountNs(sequence):
+	
+	nCount = 0
+	i = 0
+	while i < len(sequence):
+		if sequence[i] == 'N':
+			nCount += 1
+		i += 1
+		
+	return nCount
+# ----------------------------------------------------------------------------------------------- #
+
+
+
+# ----------------------------------------------------------------------------------------------- #
+def AssignBarcodeReadToPool(indexSeq, barcodeLookupTable, barcodeList, nestedDecisionDict, \
+multipleEntryPointDecisionDict, indexIndexArray, allowedNs, mismatchesAllowed, \
+sampleLength, maxTrials, minBestCandidatesForNonPerfectMatch):
+	
+	# New version of function to parse a single index read using a nested decision dictionary
 	
 	from scipy import unique
 	from pdb import set_trace
 	
+	nCount = CountNs(indexSeq)
 	
-	if indexSeq in barcodeList:
-		barcodeAssignment = [barcodeLookupTable[indexSeq], True]
-		assignmentType = 'perfect'
-	else:	
-		mismatchedSequencePossibleMatches = []
-	
-		for barcode in barcodeList:
-			searchListRegexes = mismatchRegexListDict[barcode]
-			for regex in searchListRegexes:
-				if regex.search(indexSeq) != None:
-					mismatchedSequencePossibleMatches.append(barcodeLookupTable[barcode])
-				
-		uniqueMismatchedSequencePossibleMatches = unique(mismatchedSequencePossibleMatches)
+	if nCount >= allowedNs:
+		# If we have more than the allowed number of Ns in the sequence, reject it immediately.
+		barcodeAssignment = [indexSeq, False]
+		assignmentType = 'unmatchable'	
+	else:
+		# Try to find the index sequence, or something like it using the nested decision dict.
+		# Note: we might not be able to, that's why we have the exception
+		firstLetter = indexSeq[0]
+		secondLetter = indexSeq[1]
+		
+		try:
+			candidateSequences = nestedDecisionDict[firstLetter][secondLetter]
 			
-		if len(uniqueMismatchedSequencePossibleMatches) == 1:
-			barcodeAssignment = [mismatchedSequencePossibleMatches[0], True]
-			assignmentType = 'matchable'
-		else:
-			barcodeAssignment = [indexSeq, False]
-			assignmentType = 'unmatchable'
-	
-
-	return [barcodeAssignment, assignmentType]
+			if indexSeq in candidateSequences:
+				# If we can find can find the first two letters of the index sequence with 
+				# the nested decision dict, it's likely to be perfectly matched. 
+				assignmentType = 'perfect'
+				barcodeAssignment = [barcodeLookupTable[indexSeq], True]
+			else:
+				# But, it might not be. 
+				[barcodeAssignment, assignmentType] = \
+				MatchNonPerfectIndexSequence(indexSeq, indexIndexArray, barcodeList, \
+				barcodeLookupTable, multipleEntryPointDecisionDict, maxTrials, sampleLength, 
+				mismatchesAllowed, minBestCandidatesForNonPerfectMatch)
+		
+		except:
+			# In the event that we can't find the index sequence with the nested decision dict
+			# go straight to the non-perfect matching algorithm. 
+			[barcodeAssignment, assignmentType] = \
+			MatchNonPerfectIndexSequence(indexSeq, indexIndexArray, barcodeList, \
+			barcodeLookupTable, multipleEntryPointDecisionDict, maxTrials, sampleLength, 
+			mismatchesAllowed, minBestCandidatesForNonPerfectMatch)
+				
+				
+		
+		
+	return [barcodeAssignment, assignmentType]	
+		
 # ----------------------------------------------------------------------------------------------- #
 
 
 # ----------------------------------------------------------------------------------------------- #
-def GenerateIndexMismatchRegexes(barcodeList, mismatchNumber=2):
+def MatchNonPerfectIndexSequence(indexSeq, indexIndexArray, barcodeList, barcodeLookupTable, \
+multipleEntryPointDecisionDict, \
+maxTrials, sampleLength, mismatchesAllowed, minBestCandidates):
 	
-	import re
+	from numpy.random import random, choice
+	import pdb
+	from collections import Counter
 	
-	mismatchRegexListDict = {}
+	trial = 1
+	bestCandidateMatches = []
 	
-	for barcode in barcodeList:
 	
-		searchList = Mismatch(barcode,mismatchNumber)
-		searchListRegexes = []
+	while trial <= maxTrials:
+		# Select maxTrials (usually 3) random positions in the index sequence and pull out a 
+		# short sample. Use this to interrogate the multipleEntryPointDecisionDict to get some 
+		# candidate barcode match sequences. 
+		# Sometimes the index will be mismatched, so we pull out less than maxTrials sets of 
+		# barcodes. 
+		indexChoice = choice(indexIndexArray)
+		code = str(indexChoice) + '_' + indexSeq[indexChoice:indexChoice+sampleLength]
+		
+		try:
+			candidateSequences = multipleEntryPointDecisionDict[code]		
+			hammingDistances = []
+		
+			for candidateSequence in candidateSequences:
+				# For each of the candidate sequences that we pull out, calculate its Hamming
+				# distance from the index sequence. 
+				hammingDistances.append([hamming_distance(candidateSequence, indexSeq), \
+				candidateSequence])
+			
+			# Pick the candidate sequence with the smallest Hamming distance from the index
+			sortedHammingDistances = sorted(hammingDistances, key = lambda x: x[0])
+			
+			pdb.set_trace()
+				
+			bestCandidateMatches.append(sortedHammingDistances[0][1])
+			trial += 1
+		except:
+			trial += 1
+			continue	
 	
-		for searchTerm in searchList:
-			searchListRegexes.append(re.compile(r'' + searchTerm))
+	# Now, we vote on the best candidate matches that we get. 	
+	if len(bestCandidateMatches) <= minBestCandidates:
+		# If we don't get sufficient candidates through the multipleEntryPointDecisionDict, 
+		# brute force it
+		# and try to match the sequence against every possible barcode
+		tempHammingDistances = []
+			
+		for barcode in barcodeList:
+			tempHammingDistances.append([hamming_distance(indexSeq, barcode), barcode])
+			
+	else:	
+		for candidate in bestCandidateMatches:
+			tempHammingDistances.append([hamming_distance(indexSeq, barcode), barcode])
+		
+	sortedTempHammingDistances = sorted(tempHammingDistances, key = lambda x: x[0])
+		
+	lowestHammingDistance = sortedTempHammingDistances[0][0]
+	bestMatchingBarcode = sortedTempHammingDistances[0][1]
+	
+	if lowestHammingDistance >= mismatchesAllowed:
+		matchType = 'unmatchable'
+		barcodeAssignment = [indexSeq, False]
+	else:
+		matchType = 'matchable'
+		barcodeAssignment = [barcodeLookupTable[bestMatchingBarcode], True]
 
-		mismatchRegexListDict[barcode] = searchListRegexes
-	
-	return mismatchRegexListDict
-	
+
+	return [barcodeAssignment, matchType]
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -1129,9 +1520,15 @@ totalFiles, perfectIndexReads, mismatchedButMatchableIndexReads, unMatchableInde
 
 
 # ----------------------------------------------------------------------------------------------- #
-def ParseIndexReadFile(file, mismatchRegexListDict, barcodeLookupTable, barcodeList):
+def ParseIndexReadFile(file, barcodeLookupTable, barcodeList, nestedDecisionDict, \
+multipleEntryPointDecisionDict, \
+allowedNsInIndexSeq, indexMismatchesAllowed, indexSequenceSampleLength, \
+maxTrialsForIndexMatch, minBestCandidatesForNonPerfectMatch):
+	
+	# New version of function to parse a single index read using a nested decision dictionary
 	
 	import re
+	from numpy import arange
 	
 	# We'll assume the following format for the read id
 
@@ -1160,7 +1557,10 @@ def ParseIndexReadFile(file, mismatchRegexListDict, barcodeLookupTable, barcodeL
 	mismatchedButMatchableIndexReads = 0
 	unMatchableIndexReads = 0
 	
+	# Import index sequences
+	
 	i = 0
+	
 	while i < len(fileData):
 		line = fileData[i]
 		
@@ -1176,8 +1576,15 @@ def ParseIndexReadFile(file, mismatchRegexListDict, barcodeLookupTable, barcodeL
 			
 			indexSeq = fileData[i+1].strip()
 			
+			if i == 0:
+				indexIndexArray = arange(0, len(indexSeq) - 2, 1, dtype=int)
+			
 			[barcodeAssignment, assignmentType] \
-			= AssignBarcodeReadToPool(indexSeq, mismatchRegexListDict, barcodeLookupTable, barcodeList)
+			= AssignBarcodeReadToPool(indexSeq, barcodeLookupTable, barcodeList, \
+			nestedDecisionDict, multipleEntryPointDecisionDict, indexIndexArray, 
+			allowedNsInIndexSeq, indexMismatchesAllowed, \
+			indexSequenceSampleLength, maxTrialsForIndexMatch, minBestCandidatesForNonPerfectMatch)
+			
 			
 			barcodeRecognitionDict[idString] = barcodeAssignment
 			
@@ -1218,7 +1625,9 @@ def OutputBarcodeRecognitionTable(barcodeRecognitionDict, barcodeRecognitionOutp
 
 # ------------------------------------------------------------------------------------------------ #
 def SummarizeIndexReads(indexFastqFiles, barcodeFile, indexSummaryFilePrefix, indexSummaryBaseDir, \
-outputLog):
+outputLog, allowedNsInIndexSeq=3, indexMismatchesAllowed=3, indexSequenceSampleLength=3, \
+maxTrialsForIndexMatch=5, barcodePrefix='', barcodePostfix='A', \
+minBestCandidatesForNonPerfectMatch=3):
 # Import the fastq files and summarize
 
 # In these dicts, the key is the read number, and the associated value is the code for the pool
@@ -1227,15 +1636,15 @@ outputLog):
 	import datetime
 	
 	
-	# Generate the barcode lookup table and  the mismatch regexes
-
-	[barcodeLookupTable, barcodes] = GenerateBarcodeLookupTable(barcodeFile)
-
+	# Generate the barcode lookup table and the mismatch regexes
+	[barcodeLookupTable, barcodes] = GenerateBarcodeLookupTable(barcodeFile, \
+	barcodePrefix=barcodePrefix, barcodePostfix=barcodePostfix)
 	barcodeList = list(barcodes)
-	mismatchRegexListDict = GenerateIndexMismatchRegexes(barcodeList, mismatchNumber=2)
-
 	
-	
+	# Generate the decision dictionaries
+	nestedDecisionDict = GenerateNestedDecisionDict(barcodeList)
+	multipleEntryPointDecisionDict = GenerateMultipleEntryDict(barcodeList, \
+	indexSequenceSampleLength)
 
 	j = 1
 	totalPerfectIndexReads = 0
@@ -1260,7 +1669,10 @@ outputLog):
 	
 		[barcodeRecognitionDict, perfectIndexReads, mismatchedButMatchableIndexReads, \
 		unMatchableIndexReads] = \
-		ParseIndexReadFile(file, mismatchRegexListDict, barcodeLookupTable, barcodeList)
+		ParseIndexReadFile(file, barcodeLookupTable, barcodeList, \
+		nestedDecisionDict, multipleEntryPointDecisionDict, \
+		allowedNsInIndexSeq, indexMismatchesAllowed, indexSequenceSampleLength, \
+		maxTrialsForIndexMatch, minBestCandidatesForNonPerfectMatch)
 	
 		totalPerfectIndexReads += perfectIndexReads
 		totalMismatchedButMatchableIndexReads += mismatchedButMatchableIndexReads
@@ -1606,13 +2018,14 @@ himarRecognitionFiles, outputLog, genomeArrayFileName):
 	
 	# Count lines in the summary files
 	[genomeAlignmentEntries, himarRecognitionEntries, indexAlignmentEntries, maxReadIDLength] \
-	= CountEntriesInAllSummaryFiles(genomeAlignmentFiles, indexAlignmentFiles, himarRecognitionFiles)
+	= CountEntriesInAllSummaryFiles(genomeAlignmentFiles, indexAlignmentFiles, \
+	himarRecognitionFiles)
 
 	genomeHimarIndexLinesSummaryEntry = "Genome alignment entries: " + str(genomeAlignmentEntries) \
 	+ '\n'
-	genomeHimarIndexLinesSummaryEntry += "Index alignment entries: " + str(indexAlignmentEntries) \
+	genomeHimarIndexLinesSummaryEntry += "Index alignment entries: " + str(indexAlignmentEntries)\
 	+ '\n'
-	genomeHimarIndexLinesSummaryEntry += "Himar alignment entries: " + str(himarRecognitionEntries) \
+	genomeHimarIndexLinesSummaryEntry += "Himar alignment entries: " + str(himarRecognitionEntries)\
 	+ '\n'
 	genomeHimarIndexLinesSummaryEntry += "Maximum read id length: " + str(maxReadIDLength) + '\n'
 	print(genomeHimarIndexLinesSummaryEntry)
@@ -1649,4 +2062,66 @@ himarRecognitionFiles, outputLog, genomeArrayFileName):
 	return genomeArray
 # ------------------------------------------------------------------------------------------------ #
 
+
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+# This variant of CompileAlignmentsWithIndexAndHimarSummaries works on only one set of alignment 
+# files at once, rather than trying to deal with all of them at the same time. 
+def CompileAlignmentsWithIndexAndHimarSummaries3(genomeAlignmentFile, indexAlignmentFile, \
+himarRecognitionFile, outputLog, genomeArrayFileName=None):
+
+	import gc
+	import pdb
+	
+	outputStr = gSeparatorString
+	outputStr += 'Compiling Genome Alignments \n'
+	UpdateLogFileData(outputLog, outputStr)
+	
+	# Count lines in the summary files
+	[genomeAlignmentEntries, himarRecognitionEntries, indexAlignmentEntries, maxReadIDLength] \
+	= CountEntriesInAllSummaryFiles3(genomeAlignmentFile, indexAlignmentFile, \
+	himarRecognitionFile)
+
+	genomeHimarIndexLinesSummaryEntry = "Genome alignment entries: " + str(genomeAlignmentEntries) \
+	+ '\n'
+	genomeHimarIndexLinesSummaryEntry += "Index alignment entries: " + str(indexAlignmentEntries)\
+	+ '\n'
+	genomeHimarIndexLinesSummaryEntry += "Himar alignment entries: " + str(himarRecognitionEntries)\
+	+ '\n'
+	genomeHimarIndexLinesSummaryEntry += "Maximum read id length: " + str(maxReadIDLength) + '\n'
+	print(genomeHimarIndexLinesSummaryEntry)
+	
+	
+	UpdateLogFileData(outputLog, genomeHimarIndexLinesSummaryEntry)
+	
+	
+	# Allocate arrays for import of data
+	readIDFieldCode = 'a' + str(maxReadIDLength+2)
+
+	genomeArray = ParseGenomeAlignmentFile3(readIDFieldCode, genomeAlignmentFile, \
+	genomeAlignmentEntries)
+	indexArray = ParseIndexAlignmentFile3(readIDFieldCode, indexAlignmentFile, \
+	indexAlignmentEntries)
+	himarArray =  ParseHimarAlignmentFile3(readIDFieldCode, himarRecognitionFile, \
+	himarRecognitionEntries)
+
+	genomeArray = UpdateGenomeArrayWithHimarAndIndex(genomeArray, indexArray, himarArray)
+	
+	# Write compiled genome array
+	if genomeArrayFileName != None:
+		WriteCompiledGenomeArray(genomeArrayFileName, genomeArray)
+	
+	# Generate the read taxonomy
+	taxonomyDict = GenerateSudokuReadTaxonomy(genomeArray, outputLog)
+	OutputReadTaxonomy(taxonomyDict, outputLog)
+	
+	UpdateLogFileData(outputLog, gSeparatorString)
+	print(gSeparatorString)
+	
+	gc.collect()
+	
+	return genomeArray
+# ------------------------------------------------------------------------------------------------ #
 

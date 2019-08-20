@@ -109,6 +109,13 @@ for feature in cdsFeatureArray:
 	
 		cdsLocusAndFeatureNameArray.append([locusTag, featureName, essentiality])
 		cdsLocusNameArray.append(locusTag)
+	elif 'db_xref' in tagDict:
+		locusTag = tagDict['db_xref'][0]
+		featureName = feature.featureName
+		essentiality = 'Dispensable'
+		cdsDispensableLocusNameArray.append(locusTag)
+		cdsLocusAndFeatureNameArray.append([locusTag,featureName,essentiality])
+		cdsLocusNameArray.append(locusTag)
 		
 for feature in geneFeatureArray:
 	tagDict = feature.tagDict

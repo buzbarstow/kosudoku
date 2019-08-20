@@ -36,6 +36,9 @@ def GenerateDTypeArrayForPoolPresenceDict(indexLookupTable):
 	import pdb
 	from numpy import int32
 	
+	
+# 	pdb.set_trace()
+	
 	poolNames = indexLookupTable.values()
 	poolNames = sorted(poolNames)
 		
@@ -63,10 +66,11 @@ def GeneratePoolPresenceTable(uniqueCoords, sortedValidGenomeArray, indexLookupT
 		poolPresenceTable = numpy.zeros(len(uniqueCoords), dtype=dtypeDict)
 	except:
 		pdb.set_trace()
+
 	
 	i = 0
 	while i < len(uniqueCoords):
-		poolPresenceTable[i] = uniqueCoords[i]
+		poolPresenceTable[i]['readAlignmentCoord'] = uniqueCoords[i]
 		i += 1
 	
 	
@@ -87,6 +91,8 @@ def GeneratePoolPresenceTable(uniqueCoords, sortedValidGenomeArray, indexLookupT
 		
 	return poolPresenceTable
 # ------------------------------------------------------------------------------------------------ #
+
+
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -1015,6 +1021,9 @@ def GenerateValidCoordsList(genomeArray):
 # ------------------------------------------------------------------------------------------------ #
 
 
+
+
+
 # ------------------------------------------------------------------------------------------------ #
 def GeneratePoolNameToPoolCodeLookupTable(barcodeFile):
 # Note that this
@@ -1077,15 +1086,126 @@ def BuildInitialPoolPresenceTable(genomeArray, outputLog, barcodeFile, poolPrese
 	while i < len(poolKeys):
 		poolColumns.append(indexLookupTable[poolKeys[i]])
 		i += 1
+		
+# 	pdb.set_trace()
 	
 	print("Generating Pool Presence Table")
 	poolPresenceTable = GeneratePoolPresenceTable(uniqueCoords, validGenomeArray, \
 	indexLookupTable, dtypeArray)
+	
+# 	pdb.set_trace()
 		
 	WritePoolPresenceTable3(poolPresenceTableFileName, poolPresenceTable, poolColumns)
 
 	return poolPresenceTable
 # ------------------------------------------------------------------------------------------------ #
+
+
+
+
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+def InitializeEmptyPoolPresenceTable(barcodeFile, outputLog):
+	
+	import numpy
+	import pdb
+	
+	outputStr = gSeparatorString
+	outputStr += 'Initializing Empty Pool Presence Table\n'
+	UpdateLogFileData(outputLog, outputStr)
+	print(outputStr)
+	
+	
+	indexLookupTable = GeneratePoolNameToPoolCodeLookupTable(barcodeFile)
+	dtypeArray = GenerateDTypeArrayForPoolPresenceDict(indexLookupTable)
+	
+	try:
+		poolPresenceTable = numpy.zeros(1, dtype=dtypeArray)
+	except:
+		pdb.set_trace()
+	
+	poolKeys = sorted(indexLookupTable.keys())
+	poolColumns = ['readAlignmentCoord']
+	i = 0
+	while i < len(poolKeys):
+		poolColumns.append(indexLookupTable[poolKeys[i]])
+		i += 1
+	
+	return poolPresenceTable, indexLookupTable, dtypeArray, poolColumns
+# ------------------------------------------------------------------------------------------------ #
+
+
+
+
+
+
+# ------------------------------------------------------------------------------------------------ #
+def UpdatePoolPresenceTable(poolPresenceTable, genomeArray, indexLookupTable, dtypeArray, \
+outputLog):
+	
+	import numpy
+	import pdb
+	
+	outputStr = gSeparatorString
+	outputStr += 'Updating Pool Presence Table\n'
+	UpdateLogFileData(outputLog, outputStr)
+	print(outputStr)
+	
+	
+	# Compile the valid reads
+	outputStr = "Making Valid Genome Array\n"
+	UpdateLogFileData(outputLog, outputStr)
+	print(outputStr)
+	
+	validGenomeArray = GenerateValidCoordsList(genomeArray)
+		
+	sortedValidGenomeArray = numpy.sort(validGenomeArray, order='readAlignmentCoord')
+	
+	
+	
+	# Generate the unique coordinates list
+	outputStr = "Generating Unique Coordinates List\n"
+	UpdateLogFileData(outputLog, outputStr)
+	print(outputStr)
+	
+	uniqueCoords = GenerateUniqueCoordsList(validGenomeArray)
+	uniqueCoords = numpy.sort(uniqueCoords)
+	
+	# Check to see if there are any of the unique coords that are not in the pool presence table.
+	# If they aren't, add them
+	
+	for uniqueCoord in uniqueCoords:
+		if uniqueCoord not in poolPresenceTable['readAlignmentCoord']:
+			additionToPoolPresenceTable = numpy.zeros(1, dtype=dtypeArray)
+			additionToPoolPresenceTable[0]['readAlignmentCoord'] = uniqueCoord
+			poolPresenceTable = numpy.append(poolPresenceTable, additionToPoolPresenceTable)
+	
+	
+	poolPresenceTable = numpy.sort(poolPresenceTable, order='readAlignmentCoord')
+	
+	i = 0
+	j = 0
+	
+	while j < len(poolPresenceTable):
+		while(i < len(sortedValidGenomeArray) and \
+		sortedValidGenomeArray[i]['readAlignmentCoord'] == poolPresenceTable[j]['readAlignmentCoord']):
+		
+			index = str(sortedValidGenomeArray[i]['index'])
+			column = indexLookupTable[index]
+			poolPresenceTable[j][column] += 1
+		
+			i += 1
+		j += 1
+	
+
+	return poolPresenceTable
+# ------------------------------------------------------------------------------------------------ #
+
+
+
+
 
 
 ####################################################################################################

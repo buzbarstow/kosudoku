@@ -146,7 +146,8 @@ def ImportGenBankSequence(genBankFile):
 
 # ------------------------------------------------------------------------------------------------ #
 def FindATandTAPositions(genomeFile, format='genbank'):
-# Finds all the AT and TA sequences in the genome (works for both genebank and fasta formats)
+# Does the same thing as FindATandTAPositions but can work with a GenBank or a Fasta file, \
+# so you only  need one file format
 	
 	import re
 	from pdb import set_trace
@@ -202,7 +203,7 @@ def ConvertWellIDToRowAndColumn(well):
 
 # ----------------------------------------------------------------------------------------------- #
 def InitializeOutputFoldersAndFiles(outputLog, himarRecognitionBaseDir, indexSummaryBaseDir, \
-trimmedSequencesBaseDir, genomeAlignmentBaseDir, genomeArrayFileName, \
+trimmedSequencesBaseDir, genomeAlignmentBaseDir, genomeArrayFileName, validGenomeArrayFileName, \
 poolPresenceTableFileName):
 	
 	import os.path
@@ -216,6 +217,7 @@ poolPresenceTableFileName):
 	
 	outputLogDir = os.path.dirname(outputLog)
 	genomeArrayDir = os.path.dirname(genomeArrayFileName)
+	validGenomeArrayDir = os.path.dirname(validGenomeArrayFileName)
 	poolPresenceTableDir = os.path.dirname(poolPresenceTableFileName)
 	
 # 	pdb.set_trace()
@@ -229,6 +231,30 @@ poolPresenceTableFileName):
 
 # ----------------------------------------------------------------------------------------------- #
 
+# ----------------------------------------------------------------------------------------------- #
+def InitializeOutputFoldersAndFiles3(outputLog, himarRecognitionBaseDir, indexSummaryBaseDir, \
+trimmedSequencesBaseDir, genomeAlignmentBaseDir, poolPresenceTableFileName):
+	
+	import os.path
+	
+	import pdb
+	
+	ensure_dir(himarRecognitionBaseDir)
+	ensure_dir(indexSummaryBaseDir)
+	ensure_dir(genomeAlignmentBaseDir)
+	ensure_dir(trimmedSequencesBaseDir)
+	
+	outputLogDir = os.path.dirname(outputLog)
+	poolPresenceTableDir = os.path.dirname(poolPresenceTableFileName)
+	
+	
+	ensure_dir(outputLogDir + '/')
+	ensure_dir(poolPresenceTableDir + '/')
+	
+	fileHandle = open(outputLog, 'w')
+	fileHandle.close()
+
+# ----------------------------------------------------------------------------------------------- #
 
 
 

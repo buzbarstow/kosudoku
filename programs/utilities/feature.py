@@ -539,7 +539,7 @@ def ImportFeatureArrayFromGenBank(genBankFile):
 
 	# added acceptance of = and #
 	featureTagRe = \
-	re.compile(r'\s+/([a-zA-Z0-9_\-]+)=([\'|"]*)([\[\]a-zA-Z0-9_\-\.\,\:?!><\- \t\&\*\(\)/;\+\=\#\/`\']+)([\'|"]*)')
+	re.compile(r'\s+/([a-zA-Z0-9_\-]+)=([\'|"]*)([\[\]a-zA-Z0-9_\-\.\,\:?!><\- \t\&\*\(\)/;\+\=\#\\|/`\']+)([\'|"]*)')
 # 	re.compile(r'\s+/([a-zA-Z0-9_\-]+)=([\'|"]*)([\[a\]-zA-Z0-9_\-\.\,\:\?\! \t\&\*\(\)/;\+\/`\']+)([\'|"]*)')
 
 	

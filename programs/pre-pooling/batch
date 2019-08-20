@@ -5,8 +5,8 @@
 # Created by Buz Barstow 2016-05-06
 # ------------------------------------------------------------------------------------------------ #
 
-from kosudoku.input import get_input
-from kosudoku.batch import CalculateNPick, CalculateNPoolDays, CalculateNPool
+from utilities.input import get_input
+from utilities.batch import CalculateNPick, CalculateNPoolDays, CalculateNPool
 import sys
 
 # ------------------------------------------------------------------------------------------------ #
@@ -16,8 +16,14 @@ inputParameters = ['Nplate', 'tLiquid', 'tSolid', 'tSaturation', 'rPick', 'tRest
 'mutantsPerPlate']
 
 argv = sys.argv
+if len(argv) != 2:
+    print("Error: IndexSummarize takes 1 argument, the input file name")
+    sys.exit(-1)
+proj_name = sys.argv[1]
+file_intro = '../../projects/' + proj_name + '/pre-pool-files/'
+file_name = file_intro + 'batch.inp'
 
-inputParameterValues = get_input(argv, inputParameters)
+inputParameterValues = get_input(file_name, inputParameters)
 # ------------------------------------------------------------------------------------------------ #
 
 # ------------------------------------------------------------------------------------------------ #
