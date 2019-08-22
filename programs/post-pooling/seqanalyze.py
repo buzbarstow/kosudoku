@@ -10,7 +10,7 @@
 
 
 # Created by Buz Barstow 2015-6-14
-# Last updated by Buz Barstow 2019-04-20
+# Last updated by Sean Medin 2019-08-21
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -54,9 +54,7 @@ inputParameters = ['outputLog', 'bowtieAlignmentMode', \
 'fastqFileBase', 'indexFastqFileBase', 'fastqFileNumDigits', 'fastqFileFirst', 'fastqFileLast', \
 'deleteTempFiles', \
 'allowedNsInIndexSeq', \
-'indexMismatchesAllowed', \
-'indexSequenceSampleLength', \
-'maxTrialsForIndexMatch']
+'indexMismatchesAllowed']
 
 argv = sys.argv
 if len(argv) != 2:
@@ -104,14 +102,7 @@ poolPresenceTableFileName = file_intro + inputParameterValues['poolPresenceTable
 deleteTempFiles = inputParameterValues['deleteTempFiles']
 allowedNsInIndexSeq = int(inputParameterValues['allowedNsInIndexSeq'])
 indexMismatchesAllowed = int(inputParameterValues['indexMismatchesAllowed'])
-indexSequenceSampleLength = int(inputParameterValues['indexSequenceSampleLength'])
-maxTrialsForIndexMatch = int(inputParameterValues['maxTrialsForIndexMatch'])
 # ----------------------------------------------------------------------------------------------- #
-
-
-
-
-
 
 # ----------------------------------------------------------------------------------------------- #
 # Non-Looped Part 
@@ -127,8 +118,7 @@ trimmedSequencesFilePrefix, trimmedSequencesBaseDir, outputLog)
 # Import index reads, summarize with a code where possible, if not indicate an unreadable index
 indexAlignmentFiles = SummarizeIndexReads(indexFastqFiles, barcodeFile, indexSummaryFilePrefix, \
 indexSummaryBaseDir, outputLog, allowedNsInIndexSeq=allowedNsInIndexSeq, \
-indexMismatchesAllowed=indexMismatchesAllowed, indexSequenceSampleLength=indexSequenceSampleLength,\
-maxTrialsForIndexMatch=maxTrialsForIndexMatch, barcodePrefix='', barcodePostfix=barcodePostfix)
+indexMismatchesAllowed=indexMismatchesAllowed, barcodePrefix='', barcodePostfix=barcodePostfix)
 
 
 # Import the mfa files, align against the genome and then write summaries to log file
