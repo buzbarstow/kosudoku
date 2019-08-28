@@ -5,7 +5,7 @@
 # Added new index matching functions
 # ------------------------------------------------------------------------------------------------ #
 
-from kosudoku.utils import gSeparatorString, UpdateLogFileData
+from utilities.utils import gSeparatorString, UpdateLogFileData
 
 
 # ------------------------------------------------------------------------------------------------ #

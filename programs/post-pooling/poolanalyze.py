@@ -1,9 +1,9 @@
 #!/sw/bin/python3.5
 
 # ----------------------------------------------------------------------------------------------- #
-# kosudoku-poolanalyze
+# poolanalyze
 # Created by Buz Barstow 2015-6-14
-# Last updated by Buz Barstow 2019-04-25
+# Last updated by Sean Medin 2019-08-23
 
 # All code necessary to analyze the pool presence table in preparation for calculating Bayesian
 # inference parameters.
@@ -13,11 +13,11 @@ import sys
 import warnings
 from matplotlib.pyplot import ion, ioff, show
 
-from kosudoku.input import get_input
-from kosudoku.utils import ensure_dir
-from kosudoku.grid import ImportSudokuGridLayout
-from kosudoku.pool import ImportPoolPresenceTable
-from kosudoku.poolanalysis import CalculateReadCountHistograms, \
+from utilities.input import get_input
+from utilities.utils import ensure_dir
+from utilities.grid import ImportSudokuGridLayout
+from utilities.pool import ImportPoolPresenceTable
+from utilities.poolanalysis import CalculateReadCountHistograms, \
 CalculateReadCountHistogramsForSingleAddressLines, MakeAndPlotReadCountHistogram, \
 PlotEffectOfReadThresholdOnPoolPresenceTableTaxonomy
 
@@ -36,17 +36,21 @@ ion()
 # ----------------------------------------------------------------------------------------------- #
 # Import the input parameter file
 
-# argv = sys.argv
-argv = ['', '../input/kosudoku-poolanalyze/kosudoku-poolanalyze.inp']
-
 inputParameters = [\
 'rowPools', 'colPools', 'controlPools', \
 'poolPresenceTableFileName', 'sudokuGridLayout', \
 'poolPresenceTaxonomyTableFileName', \
 'readCountThresholdForReadCountRatioHistogramCalculation', \
-'startReadCountThresholdForTrialSolution', 'endReadCountThresholdForTrialSolution']
+'startReadCountThresholdForTrialSolution', 'endReadCountThresholdForTrialSolution', 'readCountThresholdIncrement']
 
-inputParameterValues = get_input(argv, inputParameters)
+argv = sys.argv
+if len(argv) != 2:
+    print("Error: IndexSummarize takes 1 argument, the input file name")
+    sys.exit(-1)
+proj_name = sys.argv[1]
+file_intro = '../../projects/' + proj_name + '/post-pool-files/'
+file_name = file_intro + 'poolanalyze.inp'
+inputParameterValues = get_input(file_name, inputParameters)
 # ----------------------------------------------------------------------------------------------- #
 
 # ----------------------------------------------------------------------------------------------- #
@@ -55,8 +59,8 @@ inputParameterValues = get_input(argv, inputParameters)
 controlPools = inputParameterValues['controlPools'].split(',')
 rowPools = inputParameterValues['rowPools'].split(',')
 colPools = inputParameterValues['colPools'].split(',')
-poolPresenceTableFileName = inputParameterValues['poolPresenceTableFileName']
-sudokuGridLayout = inputParameterValues['sudokuGridLayout']
+poolPresenceTableFileName = file_intro + inputParameterValues['poolPresenceTableFileName']
+sudokuGridLayout = file_intro + inputParameterValues['sudokuGridLayout']
 
 readCountThresholdForReadCountRatioHistogramCalculation = \
 int(inputParameterValues['readCountThresholdForReadCountRatioHistogramCalculation'])
@@ -67,7 +71,9 @@ int(inputParameterValues['startReadCountThresholdForTrialSolution'])
 endReadCountThresholdForTrialSolution = \
 int(inputParameterValues['endReadCountThresholdForTrialSolution'])
 
-poolPresenceTaxonomyTableFileName = inputParameterValues['poolPresenceTaxonomyTableFileName']
+readCountThresholdIncrement = int(inputParameterValues['readCountThresholdIncrement'])
+
+poolPresenceTaxonomyTableFileName = file_intro + inputParameterValues['poolPresenceTaxonomyTableFileName']
 # ----------------------------------------------------------------------------------------------- #
 
 # ----------------------------------------------------------------------------------------------- #
@@ -85,11 +91,11 @@ colPools)
 # ------------------------------------------------------------------------------------------------ #
 # Calculate the sudoku pool columns
 if controlPools[0].lower() == 'none':
-	sudokuPoolColumns = ['readAlignmentCoord'] + rowPools + colPools + prPools + pcPools
-	controlPools = None
+    sudokuPoolColumns = ['readAlignmentCoord'] + rowPools + colPools + prPools + pcPools
+    controlPools = None
 else:
-	sudokuPoolColumns = ['readAlignmentCoord'] + rowPools + colPools + prPools + pcPools \
-	+ controlPools
+    sudokuPoolColumns = ['readAlignmentCoord'] + rowPools + colPools + prPools + pcPools \
+    + controlPools
 # ------------------------------------------------------------------------------------------------ #
 
 # ------------------------------------------------------------------------------------------------ #
@@ -166,7 +172,7 @@ xlabel="Log PC Pool Read Count Per Line", ylabel="Lines", binWidth=0.2)
 # coordinates into the Knockout Sudoku solution of the pool presence table.  
 PlotEffectOfReadThresholdOnPoolPresenceTableTaxonomy(poolPresenceTable, \
 rowPools, colPools, prPools, pcPools, controlPools, startReadCountThresholdForTrialSolution, \
-endReadCountThresholdForTrialSolution, poolPresenceTaxonomyTableFileName)
+endReadCountThresholdForTrialSolution, readCountThresholdIncrement, poolPresenceTaxonomyTableFileName)
 # ------------------------------------------------------------------------------------------------ #
 
 # ------------------------------------------------------------------------------------------------ #
